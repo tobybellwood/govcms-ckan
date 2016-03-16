@@ -44,7 +44,8 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
       foreach ($patterns as $pattern) {
         preg_match($pattern, $embed_code, $matches);
         if (isset($matches[1])) {
-          return file_stream_wrapper_uri_normalize($this->baseUri . $matches[1]);
+          $uri = $this->baseUri . $matches[1] . '/' . $this->getNextInstanceId($matches[1]);
+          return file_stream_wrapper_uri_normalize($uri);
         }
       }
     }
@@ -99,7 +100,7 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
    */
   public function getResource($uri) {
     $client = govcms_ckan_client();
-    $meta = $client->get('action/resource_show', array('id' => $this->getResourceIdFromUri($uri)));
+    $meta = $client->get('action/resource_show', array('id' => $this->parseIdFromUri($uri)));
 
     if ($meta->valid === TRUE) {
       return $meta->data;
@@ -110,16 +111,50 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
   }
 
   /**
-   * Extract the CKAN resource ID from a Drupal URI.
+   * Extract the CKAN resource ID or instance ID from a Drupal URI.
    *
    * @param string $uri
    *   The drupal file uri.
+   * @param string $extract
+   *   What to extract from the uri. Options are 'resource' or 'instance'.
    *
-   * @return string
-   *   The resource ID.
+   * @return string/int
+   *   The resource ID or instance ID depending on $extract arg.
    */
-  public function getResourceIdFromUri($uri) {
-    return str_replace($this->baseUri, '', $uri);
+  public function parseIdFromUri($uri, $extract = 'resource') {
+    list($resource_id, $instance) = explode('/', str_replace($this->baseUri, '', $uri), 2);
+    return $extract == 'resource' ? $resource_id : (int) $instance;
+  }
+
+  /**
+   * Get the next instance id for this resource.
+   *
+   * This allows for multiple instances of the same resource id.
+   *
+   * @param string $resource_id
+   *   The resource ID.
+   *
+   * @return int
+   *   The next unused instance id.
+   */
+  public function getNextInstanceId($resource_id) {
+    $query = new EntityFieldQuery();
+    $results = $query
+      ->entityCondition('entity_type', 'file')
+      ->propertyCondition('uri', $this->baseUri . $resource_id, 'STARTS_WITH')
+      ->execute();
+
+    // No instances of this resource yet.
+    if (!isset($results['file'])) {
+      return 0;
+    }
+
+    // Get all the instances then add 1 to the highest number.
+    $instances = array();
+    foreach (file_load_multiple(array_keys($results['file'])) as $file) {
+      $instances[] = $this->parseIdFromUri($file->uri, 'instance');
+    }
+    return (max($instances) + 1);
   }
 
   /**
