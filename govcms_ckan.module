@@ -76,204 +76,6 @@ function govcms_ckan_form_node_type_form_alter(&$form, $form_state) {
 }
 
 /**
- * Implements hook_field_info().
- */
-function govcms_ckan_field_info() {
-  return array(
-    'ckan_data' => array(
-      'label' => t('CKAN Data'),
-      'description' => t('This field stores a reference to a CKAN dataset.'),
-      'default_widget' => 'ckan_data',
-      'default_formatter' => 'ckan_data_default',
-    ),
-    'ckan_graph_type' => array(
-      'label' => t('CKAN Graph Type'),
-      'description' => t('This field stores CKAN graph type.'),
-      'default_widget' => 'ckan_graph_type',
-      'default_formatter' => 'ckan_graph_type_default',
-    ),
-  );
-}
-
-/**
- * Implements hook_field_is_empty().
- */
-function govcms_ckan_field_is_empty($item, $field) {
-  $return = FALSE;
-
-  switch ($field['type']) {
-    case 'ckan_data':
-      $return = empty($item['dataset_id']) || empty($item['dataset_title']);
-      break;
-
-    case 'ckan_graph_type':
-      $return = empty($item['type']);
-      break;
-  }
-
-  return $return;
-}
-
-/**
- * Implements hook_field_widget_info().
- */
-function govcms_ckan_field_widget_info() {
-  return array(
-    'ckan_data' => array(
-      'label' => t('CKAN Data'),
-      'field types' => array('ckan_data'),
-    ),
-    'ckan_graph_type' => array(
-      'label' => t('CKAN Graph Type'),
-      'field types' => array('ckan_graph_type'),
-    ),
-  );
-}
-
-/**
- * Implements hook_field_widget_form().
- */
-function govcms_ckan_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  switch ($instance['widget']['type']) {
-    case 'ckan_data':
-      $fields = array(
-        'dataset_id' => t('Dataset ID'),
-        'dataset_title' => t('Dataset title'),
-      );
-
-      // Loop through each field and create the appropriate widget.
-      foreach ($fields as $key => $label) {
-        $element[$key] = array(
-          '#type' => 'textfield',
-          '#title' => $label,
-          '#required' => $element['#required'],
-          '#default_value' => isset($items[$delta][$key]) ? $items[$delta][$key] : '',
-        );
-      }
-      break;
-
-    case 'ckan_graph_type':
-      // We list the default supported graph types.
-      $graph_types = array(
-        'c3js:area' => t('Area Chart'),
-        'c3js:bar' => t('Bar Chart'),
-        'c3js:stacked' => t('Bar Chart Stacked'),
-        'c3js:line' => t('Line Chart'),
-        'c3js:spline' => t('Spline Chart'),
-        'c3js:area-spline' => t('Spline Area Chart'),
-      );
-
-      $graph_orientations = array(
-        0 => t('Not applicable'),
-        1 => t('Horizontal'),
-        2 => t('Vertical'),
-      );
-
-      $fields = array(
-        'type' => array(
-          'label' => t('Type'),
-          'widget' => 'select',
-          'required' => TRUE,
-          'options' => $graph_types,
-        ),
-        'orientation' => array(
-          'label' => t('Orientation'),
-          'widget' => 'select',
-          'required' => TRUE,
-          'options' => $graph_orientations,
-        ),
-        'xaxis_label' => array(
-          'label' => t('x-Axis label'),
-          'widget' => 'textfield',
-          'required' => FALSE,
-        ),
-        'yaxis_label' => array(
-          'label' => t('y-Axis label'),
-          'widget' => 'textfield',
-          'required' => FALSE,
-        ),
-      );
-
-      // Loop through each field and create the appropriate widget.
-      foreach ($fields as $key => $item) {
-        $element[$key] = array(
-          '#type' => $item['widget'],
-          '#title' => $item['label'],
-          '#required' => $item['required'],
-        );
-
-        if (isset($item['options'])) {
-          $element[$key]['#options'] = $item['options'];
-        }
-
-        if (isset($items[$delta][$key])) {
-          $element[$key]['#default_value'] = $items[$delta][$key];
-        }
-      }
-      break;
-  }
-
-  return $element;
-}
-
-/**
- * Implements hook_field_formatter_info().
- */
-function govcms_ckan_field_formatter_info() {
-  return array(
-    'ckan_data_default' => array(
-      'label' => t('Default'),
-      'field types' => array('ckan_data'),
-    ),
-    'ckan_graph_type_default' => array(
-      'label' => t('Default'),
-      'field types' => array('ckan_graph_type'),
-    ),
-  );
-}
-
-/**
- * Implements hook_field_formatter_view().
- */
-function govcms_ckan_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $element = array();
-  $field_columns = array();
-
-  switch ($display['type']) {
-    case 'ckan_data_default':
-      $field_columns = array(
-        'dataset_id' => t('Dataset ID'),
-        'dataset_title' => t('Dataset title'),
-      );
-      break;
-
-    case 'ckan_graph_type_default':
-      $field_columns = array(
-        'type' => t('Type'),
-        'orientation' => t('Orientation'),
-        'xaxis_label' => t('x-Axis label'),
-        'yaxis_label' => t('y-Axis label'),
-      );
-      break;
-  }
-
-  foreach ($items as $delta => $item) {
-    foreach ($field_columns as $field_column_key => $field_column_label) {
-      $element[$delta][] = array(
-        '#theme' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => t('@label: @value', array(
-          '@label' => $field_column_label,
-          '@value' => $item[$field_column_key],
-        )),
-      );
-    }
-  }
-
-  return $element;
-}
-
-/**
  * Implements hook_ctools_plugin_type().
  */
 function govcms_ckan_ctools_plugin_type() {
@@ -296,6 +98,7 @@ function govcms_ckan_ctools_plugin_type() {
  *   The fully processed result of hook_ctools_plugin_api_info().
  */
 function govcms_ckan_process_plugin(&$plugin, $info) {
+
   // Add a view function.
   if (!isset($plugin['view'])) {
     $plugin['view'] = $plugin['module'] . '_' . $plugin['name'] . '_view';
@@ -311,25 +114,47 @@ function govcms_ckan_process_plugin(&$plugin, $info) {
  * Helper function to retrieve all visualisation plugins.
  *
  * @return array
- *   An array of information arrays about the plugins received. The contents
- *   of the array are specific to the plugin.
+ *   Array of all visualisations.
  */
 function govcms_ckan_get_all_plugins() {
   return ctools_get_plugins('govcms_ckan', 'visualisation');
 }
 
 /**
- * Helper function to return a specfic visualisation plugin.
+ * Helper function to return a specific visualisation plugin.
  *
  * @param string $name
  *   The name of the visualisation plugin to return.
  *
  * @return array
- *   An array of information arrays about the plugins received. The contents
- *   of the array are specific to the plugin.
+ *   A single visualisation plugin.
  */
 function govcms_ckan_get_plugin($name) {
   return ctools_get_plugins('govcms_ckan', 'visualisation', $name);
+}
+
+/**
+ * Helper function to return a specific visualisation plugin config form.
+ *
+ * @param string $name
+ *   The name of the visualisation plugin to return.
+ * @param array $form
+ *   The form context that this will be loaded into.
+ * @param array $form_state
+ *   The form state for the form this will be loaded into.
+ * @param array $config
+ *   The current configuration values.
+ *
+ * @return array
+ *   A configuration form.
+ */
+function govcms_ckan_get_plugin_config($name, $form, $form_state, $config) {
+  $plugin = govcms_ckan_get_plugin($name);
+  $config_form = array();
+  if (function_exists($plugin['configure'])) {
+    $config_form = call_user_func($plugin['configure'], $plugin, $form, $form_state, $config);
+  }
+  return $config_form;
 }
 
 /**
