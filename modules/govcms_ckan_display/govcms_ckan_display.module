@@ -1,9 +1,17 @@
 <?php
-
 /**
  * @file
  * Code for the govCMS CKAN Display module.
  */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function govcms_ckan_display_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'govcms_ckan' && in_array($plugin, array_keys(govcms_ckan_ctools_plugin_type()))) {
+    return 'plugins/' . $plugin;
+  }
+}
 
 /**
  * Implements hook_library().
@@ -55,22 +63,22 @@ function govcms_ckan_display_library() {
         'preprocess' => FALSE,
       ),
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.1.0/js/canvas-to-blob.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.1.0/js/canvas-to-blob.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
     ),
     'css' => array(
@@ -88,16 +96,16 @@ function govcms_ckan_display_library() {
     'version' => '1.1.2',
     'js' => array(
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.1.0/js/canvas-to-blob.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.1.0/js/canvas-to-blob.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
     ),
   );

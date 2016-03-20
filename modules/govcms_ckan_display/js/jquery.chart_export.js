@@ -97,9 +97,7 @@
       // Add some XML attributes.
       self.settings.svg
         .attr('version', 1.1)
-        .attr('xmlns', 'http://www.w3.org/2000/svg')
-        .find('g').removeAttr('clip-path')
-        .find('text').attr('font-family', '\'arial\'');
+        .attr('xmlns', 'http://www.w3.org/2000/svg');
 
       // Include c3js styles.
       self.includeC3jsStyle();
