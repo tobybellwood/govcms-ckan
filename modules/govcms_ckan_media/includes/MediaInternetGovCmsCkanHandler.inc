@@ -78,7 +78,7 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
 
     // Try to default the file name to the resource's title.
     if (empty($file->fid) && $info = $this->getResource($uri)) {
-      $file->filename = truncate_utf8($info->name, 255);
+      $file->filename = !empty($info->name) ? truncate_utf8($info->name, 255) : t('Untitled dataset');
     }
 
     return $file;
@@ -99,8 +99,7 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
    *   Error if unable to load the resource.
    */
   public function getResource($uri) {
-    $client = govcms_ckan_client();
-    $meta = $client->get('action/resource_show', array('id' => $this->parseIdFromUri($uri)));
+    $meta = govcms_ckan_client_request_meta($this->parseIdFromUri($uri));
 
     if ($meta->valid === TRUE) {
       return $meta->data;

@@ -1,14 +1,15 @@
 <?php
 /**
  * @file
- * Bar chart visualisation.
+ * Line chart visualisation.
  */
 
 $plugin = array(
-  'title' => t('Bar chart'),
+  'title' => t('Spline chart'),
   'settings' => array(
     'rotated' => 'false',
-    'stacked' => 0,
+    'area' => 0,
+    'show_labels' => 0,
     'x_label' => NULL,
     'y_label' => NULL,
     'grid' => NULL,
@@ -18,9 +19,9 @@ $plugin = array(
 /**
  * Returns a renderable array that represents the block content.
  */
-function govcms_ckan_display_bar_chart_view($file, $display, $config) {
+function govcms_ckan_display_spline_chart_view($file, $display, $config) {
   $element = array();
-  $chart_class = 'ckan-bar-chart';
+  $chart_class = 'ckan-spline-chart';
   $response = govcms_ckan_client_request_records($file->resource_id);
 
   // If failure, provide error message.
@@ -35,9 +36,9 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
     // Attributes for the table.
     $attributes = array(
       'class' => array('ckan-chart', $chart_class),
-      'data-type' => 'bar',
+      'data-type' => ($config['area'] == 1 ? 'area-spline' : 'spline'),
       'data-rotated' => $config['rotated'],
-      'data-stacked' => ($config['stacked'] == 1 ? 'true' : 'false'),
+      'data-labels' => ($config['show_labels'] == 1 ? 'true' : 'false'),
       'data-grid' => $config['grid'],
       'data-xLabel' => $config['x_label'],
       'data-yLabel' => $config['y_label'],
@@ -64,7 +65,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
 /**
  * Configure form callback.
  */
-function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $config) {
+function govcms_ckan_display_spline_chart_configure($plugin, $form, $form_state, $config) {
   // Get default key elements.
   $config_form = govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config);
 
@@ -78,10 +79,16 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $c
     ),
   );
 
-  $config_form['stacked'] = array(
+  $config_form['area'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Is this this stacked'),
-    '#default_value' => $config['stacked'],
+    '#title' => t('Enable area'),
+    '#default_value' => $config['area'],
+  );
+
+  $config_form['show_labels'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable data labels'),
+    '#default_value' => $config['show_labels'],
   );
 
   $config_form['x_label'] = array(

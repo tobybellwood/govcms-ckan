@@ -19,7 +19,7 @@
    * -- data-type: The type of chart in use (eg. line, spline, bar, stacked, area, area-spline).
    * -- data-chart: The chart implementation to use (see below)
    * -- data-rotated: Default is false, change to true to rotate the table axis.
-   * -- data-labels: Should lables be shown at each data point. Defaults to false
+   * -- data-labels: Should labels be shown at each data point. Defaults to false
    * -- data-defaultView: Should the chart or table be displayed first. Defaults to 'chart'.
    * -- data-palette: A comma separated list of hex colours to be used for the palette.
    * -- data-grid: Grid lines to use: xy, x or y

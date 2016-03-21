@@ -9,6 +9,15 @@ require_once dirname(__FILE__) . '/includes/govcms_ckan_media.formatters.inc';
 require_once dirname(__FILE__) . '/includes/govcms_ckan_media.field_config.inc';
 
 /**
+ * Implements hook_ctools_plugin_directory().
+ */
+function govcms_ckan_media_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'govcms_ckan' && in_array($plugin, array_keys(govcms_ckan_ctools_plugin_type()))) {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
  * Implements hook_media_internet_providers().
  */
 function govcms_ckan_media_media_internet_providers() {

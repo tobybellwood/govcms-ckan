@@ -47,9 +47,22 @@ class GovCmsCkanDatasetParser {
    * that populate the left column as opposed to the table headers (lines).
    *
    * @var string
-   *   none, keys or property. @see setXTickSource().
+   *   none, keys or values. @see setHeaderSource().
    */
-  private $xtickSource;
+  private $xtickSource = 'keys';
+
+  /**
+   * Format for a renderable array.
+   *
+   * This adds a # (hash) in front of the keys returned so it is in the format
+   * suitable for a renderable array.
+   */
+  private $renderableArray = TRUE;
+
+  /**
+   * Attributes for returned table.
+   */
+  private $tableAttributes = array();
 
   /**
    * GovCmsCkanDatasetParser constructor.
@@ -95,13 +108,13 @@ class GovCmsCkanDatasetParser {
    *   incrementing by one at each tick and no left label column in the table.
    *   - keys: The keys provided will form the x ticks (left column labels)
    *   and the legend (table header) will be formed using the labelKey property.
-   *   - label: The labelKey property in each result row will form the x tick
+   *   - values: The labelKey property in each result row will form the x tick
    *   (left column labels) and the keys will form the legend (table header).
    *
    * @return $this
    *   Return self for chaining.
    */
-  public function setHeaderSource($source = 'none') {
+  public function setHeaderSource($source = 'keys') {
     $this->xtickSource = $source;
     return $this;
   }
@@ -136,6 +149,34 @@ class GovCmsCkanDatasetParser {
   }
 
   /**
+   * Set if should be formatted for a renderable array.
+   *
+   * @param bool $renderable_array
+   *   Should add a hash in front of returned keys.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setRenderableArray($renderable_array = TRUE) {
+    $this->renderableArray = (bool) $renderable_array;
+    return $this;
+  }
+
+  /**
+   * Add attributes to the table. Can be reused as attributes are merged.
+   *
+   * @param array $attributes
+   *   Attributes to add to the table.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setTableAttributes($attributes) {
+    $this->tableAttributes = array_merge($this->tableAttributes, $attributes);
+    return $this;
+  }
+
+  /**
    * Parse the result set into headers and rows suitable for theme_table.
    *
    * @return array
@@ -157,7 +198,22 @@ class GovCmsCkanDatasetParser {
     // Create tables for each group.
     $tables = array();
     foreach ($this->groupedRecords as $group_key => $records) {
+      // Add the rows and header based on the formatter required.
       $tables[$group_key] = call_user_func(array($this, $parse_callback), $records);
+
+      // Add any additional attributes.
+      $tables[$group_key]['attributes'] = $this->tableAttributes;
+    }
+
+    // Format for renderable array if required.
+    if ($this->renderableArray === TRUE) {
+      foreach ($tables as $group_key => $table) {
+        $renderable_table = array('#theme' => 'table');
+        foreach ($table as $key => $value) {
+          $renderable_table['#' . $key] = $value;
+        }
+        $tables[$group_key] = $renderable_table;
+      }
     }
 
     // Return parsed tables.
@@ -174,7 +230,7 @@ class GovCmsCkanDatasetParser {
     $callbacks = array(
       'none' => 'parseCallbackNone',
       'keys' => 'parseCallbackKeys',
-      'label' => 'parseCallbackLabel',
+      'values' => 'parseCallbackValues',
     );
     return $callbacks[$this->xtickSource];
   }
@@ -253,8 +309,12 @@ class GovCmsCkanDatasetParser {
   private function parseCallbackKeys($records) {
     $table = array();
 
+    // We need to add the label field back to the keys for this formatter.
+    $keys = $this->keys;
+    array_unshift($keys, $this->labelKey);
+
     // Add keys as header.
-    foreach ($this->keys as $key) {
+    foreach ($keys as $key) {
       $table['header'][] = $this->labelKey == $key ? $this->createHeaderCell('col') : $key;
     }
 
@@ -262,7 +322,7 @@ class GovCmsCkanDatasetParser {
     foreach ($records as $record) {
       $row = array();
       // For each key.
-      foreach ($this->keys as $key) {
+      foreach ($keys as $key) {
         // If it is a label key, it forms an x tick cell, otherwise data.
         $row[] = $this->labelKey == $key ? $this->createHeaderCell('row', $record->{$key}) : $record->{$key};
       }
@@ -279,7 +339,7 @@ class GovCmsCkanDatasetParser {
    * @return array
    *   Table variables with header and rows set.
    */
-  private function parseCallbackLabel($records) {
+  private function parseCallbackValues($records) {
     $table = array();
 
     // TODO: Should use an x axis label for this value.

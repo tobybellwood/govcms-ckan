@@ -53,22 +53,7 @@ function govcms_ckan_media_field_widget_info() {
  * Implements hook_field_validate().
  */
 function govcms_ckan_media_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
-  // Placeholder for if and when we want to add additional validation.
-  foreach ($items as $delta => $item) {
-    // Validate each delta.
-  }
-}
-
-/**
- * Implements hook_field_formatter_info().
- */
-function govcms_ckan_media_field_formatter_info() {
-  return array(
-    'govcms_ckan_media_config_formatter' => array(
-      'label' => t('Hidden'),
-      'field types' => array('govcms_ckan_media_config'),
-    ),
-  );
+  // TODO: Let the plugin invoke validation.
 }
 
 /**
@@ -96,7 +81,7 @@ function govcms_ckan_media_field_load($entity_type, $entities, $field, $instance
   if ($field['type'] == 'govcms_ckan_media_config') {
     foreach ($entities as $id => $entity) {
       foreach ($items[$id] as $delta => $item) {
-        // Only unserialise if item['value'] is a string.
+        // Only unserialise if item['config'] is a string.
         if (is_string($item['config'])) {
           $items[$id][$delta]['config'] = unserialize($item['config']);
         }
@@ -118,7 +103,7 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
 
   // Things we use often.
   $field_name = $field['field_name'];
-  $file = $form_state['file'];
+  $file = isset($form_state['file']) ? $form_state['file'] : (object) array();
 
   // Get the config values.
   $config = array();
@@ -162,7 +147,7 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
 
   // If config says there is a configuration, load the form from the plugin.
   if (!empty($config['visualisation'])) {
-    $config_form = govcms_ckan_get_plugin_config($config['visualisation'], $form, $form_state, $config['visualisation_config']);
+    $config_form = govcms_ckan_get_plugin_config_form($config['visualisation'], $form, $form_state, $config['visualisation_config']);
     $widget['visualisation_config'] = array_merge($widget['visualisation_config'], $config_form);
   }
 
@@ -181,21 +166,44 @@ function govcms_ckan_media_field_widget_visualisation_form($form, &$form_state) 
   return $el['visualisation_config'];
 }
 
-/**
- * Implements hook_field_widget_error().
- */
-function govcms_ckan_media_field_widget_error($element, $error, $form, &$form_state) {
-  switch ($error['error']) {
-    case 'validate_url':
-      // Placeholder for validating.
-      break;
-  }
-  //form_error($error_element, $error['message']);
-}
 
 /************
  * Helpers.
  ************/
+
+/**
+ * Find the config field on a file and return the config.
+ *
+ * @param object $file
+ *   File object.
+ *
+ * @return array
+ *   The configuration, will be empty array if not found.
+ */
+function _govcms_ckan_media_get_visualisation_config($file) {
+  // Only deal with ckan files.
+  $scheme = file_uri_scheme($file->uri);
+  if ($scheme !== 'ckan') {
+    return array();
+  }
+
+  // Attempt to retrieve field name from static cache.
+  $config_field = &drupal_static(__FUNCTION__ . $file->type, NULL);
+
+  // Lookup config field name.
+  if (empty($config_field)) {
+    $fields_info = field_info_instances('file', $file->type);
+    foreach ($fields_info as $field) {
+      if (empty($config_field) && $field['widget']['type'] == 'govcms_ckan_media_config_widget') {
+        $config_field = $field['field_name'];
+      }
+    }
+  }
+
+  // Return the first configuration. A visualisation shouldn't have multiples
+  // deltas for config but if for some reason it will, change here.
+  return !empty($config_field) && isset($file->{$config_field}[LANGUAGE_NONE]) ? $file->{$config_field}[LANGUAGE_NONE][0]['config'] : array();
+}
 
 /**
  * Get all the available visualisations as select options.
@@ -215,6 +223,9 @@ function _govcms_ckan_media_field_widget_visualisation_options() {
 /**
  * This helper provides the common elements for selecting the keys.
  *
+ * This is implemented by the visualisation and merged into the form structure
+ * for that plugin.  Most visualisations will use this.
+ *
  * @param array $form
  *   Form array for the parent form.
  * @param array $form_state
@@ -225,7 +236,7 @@ function _govcms_ckan_media_field_widget_visualisation_options() {
  * @return array
  *   Form structure for new elements.
  */
-function _govcms_ckan_media_field_widget_get_key_elements($form, $form_state, $config = array()) {
+function govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config = array()) {
   $form = array();
 
   // We need a resource_id, however this file might not be saved yet, if it is
@@ -270,13 +281,25 @@ function _govcms_ckan_media_field_widget_get_key_elements($form, $form_state, $c
     '#options' => $options['numeric'],
     '#default_value' => $config['keys'],
     '#multiple' => TRUE,
+    '#required' => TRUE,
     '#description' => t('What data to display in the visualisation.'),
+  );
+
+  $form['x_axis_grouping'] = array(
+    '#type' => 'select',
+    '#title' => t('X Axis Grouping'),
+    '#options' => array(
+      'keys' => t('Group by keys'),
+      'values' => t('Group by values'),
+    ),
+    '#default_value' => isset($config['x_axis_grouping']) ? $config['x_axis_grouping'] : 'keys',
+    '#description' => t('Will the x axis be keys or values.'),
   );
 
   $form['labels'] = array(
     '#type' => 'select',
     '#title' => t('Labels'),
-    '#options' => $options['text'],
+    '#options' => $options['all'],
     '#default_value' => $config['labels'],
     '#description' => t('What field contains the labels.'),
   );
@@ -286,7 +309,7 @@ function _govcms_ckan_media_field_widget_get_key_elements($form, $form_state, $c
     '#title' => t('Split field'),
     '#options' => $options['all'],
     '#default_value' => $config['split'],
-    '#empty_option' => t('- Select -'),
+    '#empty_option' => t('None'),
     '#description' => t('Optionally spit into multiple visualisations based on the value of this key.'),
   );
 

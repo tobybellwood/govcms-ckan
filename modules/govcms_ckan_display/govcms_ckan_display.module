@@ -14,6 +14,19 @@ function govcms_ckan_display_ctools_plugin_directory($module, $plugin) {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function govcms_ckan_display_theme($existing, $type, $theme, $path) {
+  return array(
+    'ckan_empty_visualisation' => array(
+      'variables' => array('empty_text' => NULL),
+      'file' => 'theme/govcms_ckan.theme.inc',
+      'template' => 'theme/templates/govcms-ckan-empty-visualisation',
+    ),
+  );
+}
+
+/**
  * Implements hook_library().
  */
 function govcms_ckan_display_library() {
@@ -135,5 +148,37 @@ function govcms_ckan_display_add_charts($table_selector = NULL) {
         'tableChartSelectors' => array($table_selector),
       ),
     ), 'setting');
+  }
+}
+
+/**
+ * A helper to attach charts to a renderable element via a selector.
+ *
+ * Same as govcms_ckan_display_add_charts() but will attach to a form or
+ * renderable array rather than drupal_add_js/library.
+ *
+ * @param array $element
+ *   The element to attach to.
+ * @param string $table_selector
+ *   (optional) The jQuery selector for the tables you want to add charts to. If
+ *   NULL then only the libraries will be added.
+ */
+function govcms_ckan_display_attach_charts(&$element, $table_selector = NULL) {
+
+  // Include c3js library.
+  $element['#attached']['library'][] = array('govcms_ckan_display', 'c3js');
+  // Include filesaver library.
+  $element['#attached']['library'][] = array('govcms_ckan_display', 'filesaver');
+  // Include custom chart libs.
+  $element['#attached']['library'][] = array('govcms_ckan_display', 'govcms_ckan_charts');
+
+  // Add the table selector the charts will attach to.
+  if (!is_null($table_selector)) {
+    $settings = array(
+      'govcmsCkanDisplay' => array(
+        'tableChartSelectors' => array($table_selector),
+      ),
+    );
+    $element['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');
   }
 }

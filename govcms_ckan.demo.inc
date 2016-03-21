@@ -36,7 +36,7 @@ function govcms_ckan_demo_page() {
   $chart_types = array('area', 'bar');
 
   // Parsing types.
-  $table_set = array('keys' => 'Keys header', 'label' => 'Label header');
+  $table_set = array('keys' => 'Keys header', 'value' => 'Value header');
 
   // Present the data in two different formats depending on what should form the
   // lines vs axis labels.
@@ -49,6 +49,7 @@ function govcms_ckan_demo_page() {
       ->setKeys($keys)
       ->setLabelKey('Taxa')
       ->setGroupKey('Year')
+      ->setRenderableArray(FALSE)
       ->parse();
 
     // Add a title.

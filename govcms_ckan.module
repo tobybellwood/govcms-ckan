@@ -98,15 +98,17 @@ function govcms_ckan_ctools_plugin_type() {
  *   The fully processed result of hook_ctools_plugin_api_info().
  */
 function govcms_ckan_process_plugin(&$plugin, $info) {
-
   // Add a view function.
   if (!isset($plugin['view'])) {
     $plugin['view'] = $plugin['module'] . '_' . $plugin['name'] . '_view';
   }
-
   // Add a configuration form function.
   if (!isset($plugin['configure'])) {
     $plugin['configure'] = $plugin['module'] . '_' . $plugin['name'] . '_configure';
+  }
+  // Add a configuration validation function.
+  if (!isset($plugin['configure'])) {
+    $plugin['configure'] = $plugin['module'] . '_' . $plugin['name'] . '_configure_validate';
   }
 }
 
@@ -148,13 +150,41 @@ function govcms_ckan_get_plugin($name) {
  * @return array
  *   A configuration form.
  */
-function govcms_ckan_get_plugin_config($name, $form, $form_state, $config) {
+function govcms_ckan_get_plugin_config_form($name, $form, $form_state, $config) {
   $plugin = govcms_ckan_get_plugin($name);
+  // Fallback to plugin defaults if no config exists yet.
+  $config = empty($config) && !empty($plugin['settings']) ? $plugin['settings'] : $config;
   $config_form = array();
   if (function_exists($plugin['configure'])) {
     $config_form = call_user_func($plugin['configure'], $plugin, $form, $form_state, $config);
   }
   return $config_form;
+}
+
+/**
+ * Helper function to return a specific visualisation plugin config form.
+ *
+ * @param string $name
+ *   The name of the visualisation plugin to return.
+ * @param array $file
+ *   The file object.
+ * @param array $display
+ *   The current display information and config.
+ * @param string $config
+ *   The configuration for the visualisation.
+ *
+ * @return array
+ *   A renderable array for the visualisation.
+ */
+function govcms_ckan_get_plugin_view($name, $file, $display, $config) {
+  $plugin = govcms_ckan_get_plugin($name);
+  // Fallback to plugin defaults if no config exists yet.
+  $config = empty($config) && !empty($plugin['settings']) ? $plugin['settings'] : $config;
+  $content = array();
+  if (function_exists($plugin['view'])) {
+    $content = call_user_func($plugin['view'], $file, $display, $config);
+  }
+  return $content;
 }
 
 /**
@@ -165,6 +195,34 @@ function govcms_ckan_client() {
   $base_url = variable_get('govcms_ckan_endpoint_url', '');
   $api_key = variable_get('govcms_ckan_api_key', '');
   return new GovCmsCkanClient($base_url, $api_key);
+}
+
+/**
+ * Helper to return records for a resource.
+ *
+ * @param string $resource_id
+ *   The resource_id to request.
+ *
+ * @return object
+ *   A client response object.
+ */
+function govcms_ckan_client_request_records($resource_id = NULL) {
+  $client = govcms_ckan_client();
+  return $client->get('action/datastore_search', array('id' => $resource_id));
+}
+
+/**
+ * Helper to return the metadata for a resource.
+ *
+ * @param string $resource_id
+ *   The resource_id to request.
+ *
+ * @return object
+ *   A client response object.
+ */
+function govcms_ckan_client_request_meta($resource_id = NULL) {
+  $client = govcms_ckan_client();
+  return $client->get('action/resource_show', array('id' => $resource_id));
 }
 
 /**
