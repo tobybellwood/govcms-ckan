@@ -82,9 +82,11 @@ function govcms_ckan_media_field_formatter_info() {
       'mime types' => array('other/ckan'),
       'file types' => array('ckan'),
       'settings' => array(
-        'width' => 'auto',
-        'height' => 'auto',
-        'palette' => 'auto',
+        'export_width' => NULL,
+        'export_height' => NULL,
+        'palette' => NULL,
+        'x_tick_count' => NULL,
+        'y_tick_count' => NULL,
       ),
     ),
   );
@@ -125,19 +127,34 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
   $settings = $display['settings'];
   $element = array();
 
-  $element['width'] = array(
+  $element['export_width'] = array(
     '#title' => t('Width'),
     '#type' => 'textfield',
     '#default_value' => $settings['width'],
-    '#element_validate' => array('_govcms_ckan_media_visualisation_width_and_height'),
-    '#description' => 'A pixel value (without unit) or "auto"',
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('A pixel value (without unit) used when exporting as an image.'),
   );
-  $element['height'] = array(
+  $element['export_height'] = array(
     '#title' => t('Height'),
     '#type' => 'textfield',
     '#default_value' => $settings['height'],
-    '#element_validate' => array('_govcms_ckan_media_visualisation_width_and_height'),
-    '#description' => 'A pixel value (without unit) or "auto"',
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('A pixel value (without unit) used when exporting as an image.'),
+  );
+
+  $element['x_tick_count'] = array(
+    '#title' => t('X Tick Count'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['x_tick_count'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The number of ticks on the Y axis.'),
+  );
+  $element['y_tick_count'] = array(
+    '#title' => t('Y Tick Count'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['y_tick_count'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The number of ticks on the Y axis.'),
   );
 
   // TODO: Add validator & summary.
@@ -145,6 +162,7 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     '#title' => t('Palette override'),
     '#type' => 'textfield',
     '#default_value' => $settings['palette'],
+    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied'),
   );
 
   return $element;
@@ -155,20 +173,11 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
  */
 function govcms_ckan_media_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
-  $settings = $display['settings'];
-  $summary = t('Width: @width, Height: @height', array(
-    '@width'     => $settings['width'],
-    '@height'  => $settings['height'],
-  ));
-  return $summary;
-}
-
-/**
- * Validation for width and height.
- */
-function _govcms_ckan_media_visualisation_width_and_height($element, &$form_state, $form) {
-  // Check if the value is a number or auto.
-  if (!empty($element['#value']) && $element['#value'] != 'auto' && !is_numeric($element['#value'])) {
-    form_error($element, t("The value entered for @dimension is invalid. Please insert a unitless integer for pixels or 'auto'", array('@dimension' => $element['#title'])));
+  $summary = array();
+  foreach ($display['settings'] as $key => $value) {
+    if (!empty($value)) {
+      $summary[] = $key . ': ' . filter_xss($value);
+    }
   }
+  return implode('<br />', $summary);
 }

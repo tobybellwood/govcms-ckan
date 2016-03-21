@@ -180,6 +180,9 @@ function govcms_ckan_get_plugin_view($name, $file, $display, $config) {
   $plugin = govcms_ckan_get_plugin($name);
   // Fallback to plugin defaults if no config exists yet.
   $config = empty($config) && !empty($plugin['settings']) ? $plugin['settings'] : $config;
+  // Merge display settings but file config takes precedence.
+  $config = array_merge($display['settings'], $config);
+  // Invoke the view callback.
   $content = array();
   if (function_exists($plugin['view'])) {
     $content = call_user_func($plugin['view'], $file, $display, $config);

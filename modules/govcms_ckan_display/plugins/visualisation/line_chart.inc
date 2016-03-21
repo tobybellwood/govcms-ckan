@@ -36,12 +36,21 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
     // Attributes for the table.
     $attributes = array(
       'class' => array('ckan-chart', $chart_class),
+
+      // Entity settings.
       'data-type' => ($config['area'] == 1 ? 'area' : 'line'),
       'data-rotated' => $config['rotated'],
       'data-labels' => ($config['show_labels'] == 1 ? 'true' : 'false'),
       'data-grid' => $config['grid'],
       'data-xLabel' => $config['x_label'],
       'data-yLabel' => $config['y_label'],
+
+      // Display settings.
+      'data-xTickCount' => $config['x_tick_count'],
+      'data-yTickCount' => $config['y_tick_count'],
+      'data-palette' => $config['palette'],
+      'data-exportWidth' => $config['export_width'],
+      'data-exportHeight' => $config['export_height'],
     );
 
     // Parse the data.
