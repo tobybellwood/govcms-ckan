@@ -45,6 +45,14 @@ function govcms_ckan_settings_form() {
  * @see govcms_ckan_settings_form()
  */
 function govcms_ckan_settings_form_validate($form, &$form_state) {
+  // If an API key is in use, enforce https.
+  if (!empty($form_state['values']['govcms_ckan_api_key'])) {
+    $url_parts = parse_url($form_state['values']['govcms_ckan_endpoint_url']);
+    if ($url_parts['scheme'] != 'https') {
+      form_set_error('govcms_ckan_endpoint_url', t('If using an API key, the endpoint url must use HTTPS.'));
+    }
+  }
+
   // Get a client instance.
   module_load_include('inc', 'govcms_ckan', 'src/GovCmsCkanClient');
   $client = new GovCmsCkanClient(

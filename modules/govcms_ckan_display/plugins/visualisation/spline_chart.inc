@@ -55,14 +55,21 @@ function govcms_ckan_display_spline_chart_view($file, $display, $config) {
 
     // Parse the data.
     $parser = govcms_ckan_dataset_parser();
-    $element = $parser
+    $parser
       ->setResult($response->data)
       ->setKeys($keys)
       ->setLabelKey($config['labels'])
-      ->setGroupKey($config['split'])
       ->setHeaderSource($config['x_axis_grouping'])
       ->setTableAttributes($attributes)
       ->parse();
+
+    // If splitting on the value of a key.
+    if ($config['split']) {
+      $parser->setGroupKey($config['split']);
+    }
+
+    // Parse the data into tables.
+    $element = $parser->parse();
 
     // Add the JS to the tables.
     govcms_ckan_display_attach_charts($element, '.' . $chart_class);

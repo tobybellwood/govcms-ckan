@@ -132,14 +132,14 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     '#type' => 'textfield',
     '#default_value' => $settings['width'],
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('A pixel value (without unit) used when exporting as an image.'),
+    '#description' => t('A pixel value (without unit). Applied when exporting as an image.'),
   );
   $element['export_height'] = array(
     '#title' => t('Height'),
     '#type' => 'textfield',
     '#default_value' => $settings['height'],
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('A pixel value (without unit) used when exporting as an image.'),
+    '#description' => t('A pixel value (without unit). Applied when exporting as an image.'),
   );
 
   $element['x_tick_count'] = array(
@@ -157,12 +157,12 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     '#description' => t('The number of ticks on the Y axis.'),
   );
 
-  // TODO: Add validator & summary.
+  // TODO: Add validator.
   $element['palette'] = array(
     '#title' => t('Palette override'),
     '#type' => 'textfield',
     '#default_value' => $settings['palette'],
-    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied'),
+    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
   );
 
   return $element;
@@ -174,6 +174,7 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
 function govcms_ckan_media_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $summary = array();
+  // Dynamically create summary from settings.
   foreach ($display['settings'] as $key => $value) {
     if (!empty($value)) {
       $summary[] = $key . ': ' . filter_xss($value);

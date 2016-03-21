@@ -10,8 +10,8 @@
 function govcms_ckan_media_field_info() {
   return array(
     'govcms_ckan_media_config' => array(
-      'label' => t('CKAN display config'),
-      'description' => t('This field stores the configuration for the display of a CKAN graph.'),
+      'label' => t('CKAN Visualisation'),
+      'description' => t('Configuration and display of a CKAN dataset.'),
       'default_widget' => 'govcms_ckan_media_config_widget',
       'default_formatter' => 'govcms_ckan_media_config_formatter',
       // Not working yet, @see https://www.drupal.org/node/680910.
@@ -42,7 +42,7 @@ function govcms_ckan_media_field_is_empty($item, $field) {
 function govcms_ckan_media_field_widget_info() {
   return array(
     'govcms_ckan_media_config_widget' => array(
-      'label' => t('Graph configuration'),
+      'label' => t('Visualisation configuration'),
       'field types' => array('govcms_ckan_media_config'),
       'settings' => array(),
     ),
@@ -172,7 +172,7 @@ function govcms_ckan_media_field_widget_visualisation_form($form, &$form_state) 
  ************/
 
 /**
- * Find the config field on a file and return the config.
+ * Find the config field on a file entity and return its config.
  *
  * @param object $file
  *   File object.
