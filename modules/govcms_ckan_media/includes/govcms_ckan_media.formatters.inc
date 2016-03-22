@@ -11,12 +11,6 @@
  * displayed as a static image and the file is a link to the public dataset.
  */
 function govcms_ckan_media_file_formatter_info() {
-  $formatters['govcms_ckan_media_public_link'] = array(
-    'label' => t('CKAN public URL'),
-    'file types' => array('ckan'),
-    'view callback' => 'govcms_ckan_media_file_formatter_public_link_view',
-    'mime types' => array('other/ckan'),
-  );
 
   $formatters['govcms_ckan_media_image'] = array(
     'label' => t('CKAN Preview Image'),
@@ -47,24 +41,6 @@ function govcms_ckan_media_file_formatter_image_view($file, $display, $langcode)
       '#alt' => isset($file->override['attributes']['alt']) ? $file->override['attributes']['alt'] : $file->filename,
     );
   }
-}
-
-/**
- * Implements hook_file_formatter_FORMATTER_view().
- *
- * The formatter for the link to the public dataset.
- */
-function govcms_ckan_media_file_formatter_public_link_view($file, $display, $langcode) {
-  $scheme = file_uri_scheme($file->uri);
-  if ($scheme !== 'ckan') {
-    return array();
-  }
-
-  // TODO: Render the file as a link to the public dataset, would prefer not to
-  // do another request to get the package_id. Possible store in file_metadata
-  // and use MediaReadOnlyStreamWrapper:getExternalUrl() to generate?
-  return array('#markup' => filter_xss($file->filename));
-
 }
 
 /**
@@ -103,13 +79,11 @@ function govcms_ckan_media_field_formatter_view($entity_type, $entity, $field, $
   switch ($display['type']) {
     case 'govcms_ckan_media_config_formatter':
       foreach ($items as $delta => $item) {
-
         // Load the config so we can include the correct renderer.
         $config = _govcms_ckan_media_get_visualisation_config($entity);
         if (isset($config['visualisation'])) {
           $element[$delta] = govcms_ckan_get_plugin_view($config['visualisation'], $entity, $display, $config['visualisation_config']);
         }
-
       }
       break;
   }
@@ -118,14 +92,19 @@ function govcms_ckan_media_field_formatter_view($entity_type, $entity, $field, $
 }
 
 /**
- * Implements hook_file_formatter_FORMATTER_settings().
+ * Implements hook_field_formatter_settings_form().
  *
- * Generic formatter settings for the configuration.
+ * Generic field wide formatter settings for the visualisation.
  */
 function govcms_ckan_media_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
   $element = array();
+
+  // This form only applies to this formatter.
+  if ($display['type'] != 'govcms_ckan_media_config_formatter') {
+    return $element;
+  }
 
   $element['export_width'] = array(
     '#title' => t('Width'),
@@ -180,5 +159,5 @@ function govcms_ckan_media_field_formatter_settings_summary($field, $instance, $
       $summary[] = $key . ': ' . filter_xss($value);
     }
   }
-  return implode('<br />', $summary);
+  return !empty($summary) ? implode('<br />', $summary) : t('Default display');
 }

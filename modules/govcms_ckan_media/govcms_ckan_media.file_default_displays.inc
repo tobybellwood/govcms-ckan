@@ -13,14 +13,6 @@ function govcms_ckan_media_file_default_displays() {
 
   $file_display = new stdClass();
   $file_display->api_version = 1;
-  $file_display->name = 'ckan__default__govcms_ckan_media_ckan';
-  $file_display->weight = 0;
-  $file_display->status = TRUE;
-  $file_display->settings = array();
-  $file_displays['ckan__default__govcms_ckan_media_ckan'] = $file_display;
-
-  $file_display = new stdClass();
-  $file_display->api_version = 1;
   $file_display->name = 'ckan__preview__govcms_ckan_media_image';
   $file_display->weight = 0;
   $file_display->status = TRUE;

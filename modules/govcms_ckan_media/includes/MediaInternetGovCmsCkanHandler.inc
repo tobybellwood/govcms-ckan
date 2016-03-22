@@ -31,20 +31,21 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
    *   A normalised file URI. FALSE if no match.
    */
   public function parse($embed_code) {
-
-    // @baseurl/dataset/PACKAGE_ID/resource/*
-    // @baseurl/api/3/action/resource_show?id=*
+    // @baseurl/dataset/PACKAGE_ID/resource/RESOURCE_ID/download/filename.csv
+    // @baseurl/dataset/PACKAGE_ID/resource/RESOURCE_ID
     $patterns = array(
-      '@' . $this->baseHost . '/dataset/(?:[^"\&\? ]+)/resource/([^"\&\? ]+)@i',
-      '@' . $this->baseHost . '/api/3/action/resource_show[#\?].*?id=([^"\&\? ]+)@i',
+      '@' . $this->baseHost . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)/download/(?:[^"\&\? ]+)@i',
+      '@' . $this->baseHost . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)@i',
     );
 
     // First check if the url contains the embed code.
     if ($this->isCkanUrl($embed_code)) {
       foreach ($patterns as $pattern) {
         preg_match($pattern, $embed_code, $matches);
-        if (isset($matches[1])) {
-          $uri = $this->baseUri . $matches[1] . '/' . $this->getNextInstanceId($matches[1]);
+        dsm($matches);
+        if (isset($matches[1]) && isset($matches[2])) {
+          $next_instance = $this->getNextInstanceId($matches[1], $matches[2]);
+          $uri = $this->baseUri . $matches[1] . '/' . $matches[2] . '/' . $next_instance;
           return file_stream_wrapper_uri_normalize($uri);
         }
       }
@@ -78,6 +79,7 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
 
     // Try to default the file name to the resource's title.
     if (empty($file->fid) && $info = $this->getResource($uri)) {
+      // Some resources may not have a name so we add a fallback.
       $file->filename = !empty($info->name) ? truncate_utf8($info->name, 255) : t('Untitled dataset');
     }
 
@@ -115,14 +117,15 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
    * @param string $uri
    *   The drupal file uri.
    * @param string $extract
-   *   What to extract from the uri. Options are 'resource' or 'instance'.
+   *   What to extract from the uri.
+   *   Options are 'package', 'resource' or 'instance'.
    *
    * @return string/int
    *   The resource ID or instance ID depending on $extract arg.
    */
   public function parseIdFromUri($uri, $extract = 'resource') {
-    list($resource_id, $instance) = explode('/', str_replace($this->baseUri, '', $uri), 2);
-    return $extract == 'resource' ? $resource_id : (int) $instance;
+    $wrapper = file_stream_wrapper_get_instance_by_uri($uri);
+    return $wrapper->parseIdFromUri($extract);
   }
 
   /**
@@ -130,17 +133,19 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
    *
    * This allows for multiple instances of the same resource id.
    *
+   * @param string $package_id
+   *   The resource ID.
    * @param string $resource_id
    *   The resource ID.
    *
    * @return int
    *   The next unused instance id.
    */
-  public function getNextInstanceId($resource_id) {
+  public function getNextInstanceId($package_id, $resource_id) {
     $query = new EntityFieldQuery();
     $results = $query
       ->entityCondition('entity_type', 'file')
-      ->propertyCondition('uri', $this->baseUri . $resource_id, 'STARTS_WITH')
+      ->propertyCondition('uri', $this->baseUri . $package_id . '/' . $resource_id, 'STARTS_WITH')
       ->execute();
 
     // No instances of this resource yet.

@@ -85,9 +85,10 @@ function govcms_ckan_media_file_load($files) {
   // Load the resource_id and instance as properties of the file object.
   foreach ($files as $i => $file) {
     if ($file->type == 'ckan') {
-      list($type, $resource_id, $instance) = explode('/', file_uri_target($file->uri), 3);
-      $files[$i]->resource_id = $resource_id;
-      $files[$i]->instance = $instance;
+      $wrapper = file_stream_wrapper_get_instance_by_uri($file->uri);
+      $files[$i]->resource_id = $wrapper->parseIdFromUri('resource');
+      $files[$i]->package_id = $wrapper->parseIdFromUri('package');
+      $files[$i]->instance = $wrapper->parseIdFromUri('instance');
     }
   }
 }
