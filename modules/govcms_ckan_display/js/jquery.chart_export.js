@@ -43,6 +43,9 @@
       format: 'svg',
       // Filename (without extension).
       filename: 'chart',
+      // Export as png dimensions. When values are empty, will automatically size.
+      width: '',
+      height: '',
       // Include c3js styles (fixes display bugs with c3js charts)
       includeC3jsStyles: true,
       c3jsStyles: 'svg{font:10px sans-serif}line,path{fill:none;stroke:#000}',
@@ -150,17 +153,53 @@
       // On image load, trigger its download with html5 download attr.
       image.onload = function () {
         // Once loaded, turn the image object into a 2d canvas.
-        var canvas = document.createElement('canvas'), context;
-        canvas.width = image.width;
-        canvas.height = image.height;
+        var canvas = document.createElement('canvas'), context, dimensions;
+        dimensions = self.getDimensions(image);
+        canvas.width = dimensions.width;
+        canvas.height = dimensions.height;
         context = canvas.getContext('2d');
-        context.drawImage(image, 0, 0);
+        context.drawImage(image, 0, 0, dimensions.width, dimensions.height);
 
         // Save using canvas-toBlob.js.
-        canvas.toBlob(function(blob){
+        canvas.toBlob(function (blob) {
           saveAs(blob, self.getFilename());
         });
       };
+    };
+
+    /*
+     * Returns the width and height for the canvas based on settings and AR.
+     *
+     * @param image
+     *   The image with the src populated as the chart.
+     */
+    self.getDimensions = function (image) {
+      // Default to the image width/height.
+      var d = {width: image.width, height: image.height}, ar;
+
+      // If overridden we do some additional processing with the settings.
+      if (self.settings.width !== '') {
+        // Width set, height optional.
+        d.width = parseInt(self.settings.width);
+
+        // If no height, we calculate with the aspect ratio.
+        if (self.settings.height === '') {
+          ar = (image.height / image.width);
+          d.height = Math.round((d.width * ar));
+        } else {
+          // Defined width and height: May result in cropping or poor AR.
+          d.height = parseInt(self.settings.height);
+        }
+
+      } else if (self.settings.height !== '') {
+        // No width, only height defined, calculate width with AR.
+        d.height = parseInt(self.settings.height);
+        ar = (image.width / image.height);
+        d.width = Math.round((d.height * ar));
+      }
+
+      // Return the dimensions object.
+      return d;
     };
 
     /*

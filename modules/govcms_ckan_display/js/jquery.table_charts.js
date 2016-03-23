@@ -30,6 +30,8 @@
    * -- data-xTickCull: The max count of labels on the X axis
    * -- data-yTickCull: The max count of labels on the Y axis
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
+   * -- data-exportWidth: The width of the exported png. @see chartExport()
+   * -- data-exportHeight: The height of the exported png. @see chartExport()
    * - Table headings (th) is used as the label and the following attributes can be used
    * -- data-color: Hex colour, alternative to using palette on the table element.
    * -- data-style: The style for the line (dashed, solid)
@@ -98,8 +100,8 @@
       xTickCull: null,
       yTickCull: null,
       stacked: false,
-      exportWidth: null,
-      exportHeight: null,
+      exportWidth: '',
+      exportHeight: '',
       yRound: 4,
       // The data for the chart.
       columns: [],
@@ -337,7 +339,12 @@
           .html('Download as ' + format)
           .insertAfter(self.$toggle)
           .addClass(self.settings.component + '--download')
-          .chartExport({format: format, svg: self.$chart});
+          .chartExport({
+            format: format,
+            svg: self.$chart,
+            width: self.settings.exportWidth,
+            height: self.settings.exportHeight
+          });
       });
 
       // Return self for chaining.
@@ -478,8 +485,7 @@
     return this.each(function (i, dom) {
       // Store all the charts on the page in tableCharts.
       // Each chart needs a unique ID for the page.
-      // TODO: Consider alternative way of creating a chartId, will get conflicts if called multiple times.
-      settings.chartId = i;
+      settings.chartId = window.tableCharts.length + 1;
       window.tableCharts.push(
         new TableChart(dom, settings)
       );

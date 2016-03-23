@@ -220,6 +220,11 @@ function _govcms_ckan_media_field_widget_visualisation_options() {
   return $options;
 }
 
+
+/******************************
+ * Config form default elements.
+ ******************************/
+
 /**
  * This helper provides the common elements for selecting the keys.
  *
@@ -290,18 +295,18 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
     '#title' => t('X Axis Grouping'),
     '#options' => array(
       'keys' => t('Group by keys'),
-      'values' => t('Group by values'),
+      'values' => t('Group by label values'),
     ),
     '#default_value' => isset($config['x_axis_grouping']) ? $config['x_axis_grouping'] : 'keys',
-    '#description' => t('Will the x axis be keys or values.'),
+    '#description' => t('Will the x axis be keys or values of the label key.'),
   );
 
   $form['labels'] = array(
     '#type' => 'select',
-    '#title' => t('Labels'),
+    '#title' => t('Label key'),
     '#options' => $options['all'],
     '#default_value' => $config['labels'],
-    '#description' => t('What field contains the labels.'),
+    '#description' => t('What key contains the labels.'),
   );
 
   $form['split'] = array(
@@ -320,4 +325,77 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
   );
 
   return $form;
+}
+
+/**
+ * This helper provides the common elements for graph display axis settings.
+ *
+ * Eg: labels, tick counts, etc.
+ *
+ * @param array $form
+ *   Form array for the parent form.
+ * @param array $form_state
+ *   Current form state array from the parent form.
+ * @param array $config
+ *   The current configuration values.
+ *
+ * @return array
+ *   Form structure for new elements.
+ */
+function govcms_ckan_media_visualisation_default_axis_config($form, $form_state, $config = array()) {
+  $element = array();
+
+  // Labels.
+  $element['x_label'] = array(
+    '#type' => 'textfield',
+    '#title' => t('X axis label'),
+    '#default_value' => $config['x_label'],
+  );
+  $element['y_label'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Y axis label'),
+    '#default_value' => $config['y_label'],
+  );
+
+  // Advanced settings.
+  $element['axis_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced axis settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  // Limit tick count.
+  $element['axis_settings']['x_tick_count'] = array(
+    '#title' => t('X Tick Count'),
+    '#type' => 'textfield',
+    '#default_value' => $config['axis_settings']['x_tick_count'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The number of ticks on the X axis.'),
+  );
+  $element['axis_settings']['y_tick_count'] = array(
+    '#title' => t('Y Tick Count'),
+    '#type' => 'textfield',
+    '#default_value' => $config['axis_settings']['y_tick_count'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The number of ticks on the Y axis.'),
+  );
+
+  // Limit label count.
+  $element['axis_settings']['x_tick_cull'] = array(
+    '#title' => t('X Label Count'),
+    '#type' => 'textfield',
+    '#default_value' => $config['axis_settings']['x_tick_cull'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The max number of labels on the Xaxis.'),
+  );
+  $element['axis_settings']['y_tick_cull'] = array(
+    '#title' => t('Y Label Count'),
+    '#type' => 'textfield',
+    '#default_value' => $config['axis_settings']['y_tick_cull'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The max number of labels on the Y axis.'),
+  );
+
+  return $element;
 }
