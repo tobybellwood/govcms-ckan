@@ -63,6 +63,8 @@ function govcms_ckan_media_field_formatter_info() {
         'palette' => NULL,
         'x_tick_count' => NULL,
         'y_tick_count' => NULL,
+        'x_tick_cull' => NULL,
+        'y_tick_cull' => NULL,
       ),
     ),
   );
@@ -126,7 +128,7 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     '#type' => 'textfield',
     '#default_value' => $settings['x_tick_count'],
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The number of ticks on the Y axis.'),
+    '#description' => t('The number of ticks on the X axis.'),
   );
   $element['y_tick_count'] = array(
     '#title' => t('Y Tick Count'),
@@ -134,6 +136,21 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     '#default_value' => $settings['y_tick_count'],
     '#element_validate' => array('element_validate_integer'),
     '#description' => t('The number of ticks on the Y axis.'),
+  );
+
+  $element['x_tick_cull'] = array(
+    '#title' => t('X Label Count'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['x_tick_cull'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The max number of labels on the Xaxis.'),
+  );
+  $element['y_tick_cull'] = array(
+    '#title' => t('Y Label Count'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['y_tick_cull'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The max number of labels on the Y axis.'),
   );
 
   // TODO: Add validator.

@@ -119,6 +119,7 @@ function govcms_ckan_process_plugin(&$plugin, $info) {
  *   Array of all visualisations.
  */
 function govcms_ckan_get_all_plugins() {
+  ctools_include('plugins');
   return ctools_get_plugins('govcms_ckan', 'visualisation');
 }
 
@@ -132,6 +133,7 @@ function govcms_ckan_get_all_plugins() {
  *   A single visualisation plugin.
  */
 function govcms_ckan_get_plugin($name) {
+  ctools_include('plugins');
   return ctools_get_plugins('govcms_ckan', 'visualisation', $name);
 }
 

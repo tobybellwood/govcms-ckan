@@ -27,6 +27,8 @@
    * -- data-yLabel: The optional label to show on the Y axis
    * -- data-xTickCount: The count of ticks on the X axis
    * -- data-yTickCount: The count of ticks on the Y axis
+   * -- data-xTickCull: The max count of labels on the X axis
+   * -- data-yTickCull: The max count of labels on the Y axis
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
    * - Table headings (th) is used as the label and the following attributes can be used
    * -- data-color: Hex colour, alternative to using palette on the table element.
@@ -91,8 +93,10 @@
       grid: null,
       xLabel: null,
       yLabel: null,
-      xTickCount: null,
+      xTickCount: 10,
       yTickCount: null,
+      xTickCull: 10,
+      yTickCull: null,
       stacked: false,
       exportWidth: null,
       exportHeight: null,
@@ -104,7 +108,8 @@
       // The labels to show on the x axis ticks.
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
-      dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickCount', 'yTickCount', 'stacked', 'exportWidth', 'exportHeight', 'yRound'],
+      dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickCount',
+        'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight', 'yRound'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -138,7 +143,7 @@
       // each of those and if not empty, override the settings.
       $(self.settings.dataAttributes).each(function (i, attr) {
         val = self.settings.$dom.data(attr);
-        if (val !== undefined && val !== null) {
+        if (val !== undefined && val !== null && val !== '') {
           self.settings[attr] = val;
         }
       });
@@ -404,6 +409,14 @@
     }
     if (settings.yTickCount) {
       axis.y.tick.count = parseInt(settings.yTickCount);
+    }
+
+    // Define the tick label culling (max labels).
+    if (settings.xTickCull) {
+      axis.x.tick.culling = {max: parseInt(settings.xTickCull)};
+    }
+    if (settings.yTickCull) {
+      axis.y.tick.culling = {max: parseInt(settings.yTickCull)};
     }
 
     // Perform rounding on Y axis values.

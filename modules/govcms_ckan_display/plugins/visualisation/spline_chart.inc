@@ -48,6 +48,8 @@ function govcms_ckan_display_spline_chart_view($file, $display, $config) {
       // Display settings.
       'data-xTickCount' => $config['x_tick_count'],
       'data-yTickCount' => $config['y_tick_count'],
+      'data-xTickCull' => $config['x_tick_cull'],
+      'data-yTickCull' => $config['y_tick_cull'],
       'data-palette' => $config['palette'],
       'data-exportWidth' => $config['export_width'],
       'data-exportHeight' => $config['export_height'],
