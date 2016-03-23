@@ -76,8 +76,13 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       $parser->setGroupKey($config['split']);
     }
 
-    // Parse the data into tables.
-    $element = $parser->parse();
+
+    // Return the parsed tables in a wrapper.
+    $element = array(
+      '#theme' => 'ckan_display_table_wrapper',
+      '#tables' => $parser->parse(),
+      '#show_titles' => !empty($config['split']),
+    );
 
     // Add the JS to the tables.
     govcms_ckan_display_attach_charts($element, '.' . $chart_class);

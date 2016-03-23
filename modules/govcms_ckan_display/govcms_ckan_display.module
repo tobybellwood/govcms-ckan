@@ -23,6 +23,16 @@ function govcms_ckan_display_theme($existing, $type, $theme, $path) {
       'file' => 'theme/govcms_ckan.theme.inc',
       'template' => 'theme/templates/govcms-ckan-empty-visualisation',
     ),
+    'ckan_display_table_wrapper' => array(
+      'variables' => array(
+        'tables' => array(),
+        'show_titles' => TRUE,
+        'content' => array(),
+        'classes_array' => array('ckan-display-table-wrapper'),
+      ),
+      'file' => 'theme/govcms_ckan.theme.inc',
+      'template' => 'theme/templates/govcms-ckan-display-table-wrapper',
+    ),
   );
 }
 
