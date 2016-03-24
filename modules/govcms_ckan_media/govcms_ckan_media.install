@@ -56,7 +56,9 @@ function _govcms_ckan_media_create_config_field($entity_type, $bundle) {
     $field = array(
       'field_name' => $field_name,
       'type' => 'govcms_ckan_media_config',
+      'module' => 'govcms_ckan_media',
       'cardinality' => 1,
+      'entity_types' => array('file'),
     );
     $field = field_create_field($field);
   }
