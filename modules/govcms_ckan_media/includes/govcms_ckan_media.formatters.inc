@@ -6,8 +6,12 @@
 
 /**
  * Implements hook_file_formatter_info().
+ *
+ * The basic file formatters for both preview and the file, the preview is
+ * displayed as a static image and the file is a link to the public dataset.
  */
 function govcms_ckan_media_file_formatter_info() {
+
   $formatters['govcms_ckan_media_image'] = array(
     'label' => t('CKAN Preview Image'),
     'file types' => array('ckan'),
@@ -23,6 +27,8 @@ function govcms_ckan_media_file_formatter_info() {
 
 /**
  * Implements hook_file_formatter_FORMATTER_view().
+ *
+ * The formatter for the preview image.
  */
 function govcms_ckan_media_file_formatter_image_view($file, $display, $langcode) {
   $scheme = file_uri_scheme($file->uri);
@@ -35,4 +41,140 @@ function govcms_ckan_media_file_formatter_image_view($file, $display, $langcode)
       '#alt' => isset($file->override['attributes']['alt']) ? $file->override['attributes']['alt'] : $file->filename,
     );
   }
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ *
+ * This is the formatter for the visualisation. The config field is rendered
+ * using this formatter.
+ */
+function govcms_ckan_media_field_formatter_info() {
+  return array(
+    'govcms_ckan_media_config_formatter' => array(
+      'label' => t('Visualisation'),
+      'field types' => array('govcms_ckan_media_config'),
+      'view callback' => 'govcms_ckan_media_field_formatter_view',
+      'mime types' => array('other/ckan'),
+      'file types' => array('ckan'),
+      'settings' => array(
+        'export_width' => NULL,
+        'export_height' => NULL,
+        'palette' => NULL,
+        'x_tick_count' => NULL,
+        'y_tick_count' => NULL,
+        'x_tick_cull' => NULL,
+        'y_tick_cull' => NULL,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ *
+ * The formatter for the config field that gets rendered as the visualisation.
+ */
+function govcms_ckan_media_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  switch ($display['type']) {
+    case 'govcms_ckan_media_config_formatter':
+      foreach ($items as $delta => $item) {
+        // Load the config so we can include the correct renderer.
+        $config = _govcms_ckan_media_get_visualisation_config($entity);
+        if (isset($config['visualisation'])) {
+          $element[$delta] = govcms_ckan_get_plugin_view($config['visualisation'], $entity, $display, $config['visualisation_config']);
+        }
+      }
+      break;
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ *
+ * Generic field wide formatter settings for the visualisation.
+ */
+function govcms_ckan_media_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $element = array();
+
+  // This form only applies to this formatter.
+  if ($display['type'] != 'govcms_ckan_media_config_formatter') {
+    return $element;
+  }
+
+  $element['export_width'] = array(
+    '#title' => t('Width'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['width'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('A pixel value (without unit). Applied when exporting as an image.'),
+  );
+  $element['export_height'] = array(
+    '#title' => t('Height'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['height'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('A pixel value (without unit). Applied when exporting as an image.'),
+  );
+
+  $element['x_tick_count'] = array(
+    '#title' => t('X Tick Count'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['x_tick_count'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The number of ticks on the X axis.'),
+  );
+  $element['y_tick_count'] = array(
+    '#title' => t('Y Tick Count'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['y_tick_count'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The number of ticks on the Y axis.'),
+  );
+
+  $element['x_tick_cull'] = array(
+    '#title' => t('X Label Count'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['x_tick_cull'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The max number of labels on the Xaxis.'),
+  );
+  $element['y_tick_cull'] = array(
+    '#title' => t('Y Label Count'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['y_tick_cull'],
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The max number of labels on the Y axis.'),
+  );
+
+  // TODO: Add validator.
+  $element['palette'] = array(
+    '#title' => t('Palette override'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['palette'],
+    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
+  );
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function govcms_ckan_media_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $summary = array();
+  // Dynamically create summary from settings.
+  foreach ($display['settings'] as $key => $value) {
+    if (!empty($value)) {
+      $summary[] = $key . ': ' . filter_xss($value);
+    }
+  }
+  return !empty($summary) ? implode('<br />', $summary) : t('Default display');
 }

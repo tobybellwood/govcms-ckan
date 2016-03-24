@@ -19,12 +19,17 @@
    * -- data-type: The type of chart in use (eg. line, spline, bar, stacked, area, area-spline).
    * -- data-chart: The chart implementation to use (see below)
    * -- data-rotated: Default is false, change to true to rotate the table axis.
-   * -- data-labels: Should lables be shown at each data point. Defaults to false
+   * -- data-labels: Should labels be shown at each data point. Defaults to false
    * -- data-defaultView: Should the chart or table be displayed first. Defaults to 'chart'.
    * -- data-palette: A comma separated list of hex colours to be used for the palette.
    * -- data-grid: Grid lines to use: xy, x or y
    * -- data-xLabel: The optional label to show on the X axis
    * -- data-yLabel: The optional label to show on the Y axis
+   * -- data-xTickCount: The count of ticks on the X axis
+   * -- data-yTickCount: The count of ticks on the Y axis
+   * -- data-xTickCull: The max count of labels on the X axis
+   * -- data-yTickCull: The max count of labels on the Y axis
+   * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
    * - Table headings (th) is used as the label and the following attributes can be used
    * -- data-color: Hex colour, alternative to using palette on the table element.
    * -- data-style: The style for the line (dashed, solid)
@@ -88,7 +93,14 @@
       grid: null,
       xLabel: null,
       yLabel: null,
+      xTickCount: null,
+      yTickCount: null,
+      xTickCull: null,
+      yTickCull: null,
       stacked: false,
+      exportWidth: null,
+      exportHeight: null,
+      yRound: 4,
       // The data for the chart.
       columns: [],
       data: {},
@@ -96,7 +108,8 @@
       // The labels to show on the x axis ticks.
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
-      dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'stacked'],
+      dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickCount',
+        'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight', 'yRound'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -130,13 +143,13 @@
       // each of those and if not empty, override the settings.
       $(self.settings.dataAttributes).each(function (i, attr) {
         val = self.settings.$dom.data(attr);
-        if (val !== undefined && val !== null) {
+        if (val !== undefined && val !== null && val !== '') {
           self.settings[attr] = val;
         }
       });
 
       // Palette gets transformed into an array (may be overridden by table headings).
-      if (self.settings.$dom.data('palette') !== undefined) {
+      if (self.settings.$dom.data('palette') !== undefined && self.settings.$dom.data('palette') !== '') {
         self.settings.palette = self.settings.$dom.data('palette').replace(' ', '').split(',');
       }
 
@@ -207,7 +220,7 @@
           columns[col] = columns[col] || [];
 
           // If dealing with the table headers.
-          val = isHeader === true ? self.parseTableHeading($cell, c) : parseInt($cell.html());
+          val = isHeader === true ? self.parseTableHeading($cell, c) : parseFloat($cell.html());
 
           // Add the rows to the correct data set.
           columns[col].push(val);
@@ -386,8 +399,30 @@
     // Define the axis settings.
     var axis = {
       rotated: settings.rotated,
-      x: {label: settings.xLabel},
-      y: {label: settings.yLabel}
+      x: {label: settings.xLabel, tick: {}},
+      y: {label: settings.yLabel, tick: {}}
+    };
+
+    // Define the tick counts.
+    if (settings.xTickCount) {
+      axis.x.tick.count = parseInt(settings.xTickCount);
+    }
+    if (settings.yTickCount) {
+      axis.y.tick.count = parseInt(settings.yTickCount);
+    }
+
+    // Define the tick label culling (max labels).
+    if (settings.xTickCull) {
+      axis.x.tick.culling = {max: parseInt(settings.xTickCull)};
+    }
+    if (settings.yTickCull) {
+      axis.y.tick.culling = {max: parseInt(settings.yTickCull)};
+    }
+
+    // Perform rounding on Y axis values.
+    axis.y.tick.format = function (y) {
+      var places = Math.pow(10, parseInt(settings.yRound));
+      return Math.round(y * places) / places;
     };
 
     // Add X axis labels.
@@ -396,7 +431,7 @@
       settings.data.columns.push(settings.xLabels);
       // this needed to load string x value
       axis.x.type = 'category';
-    };
+    }
 
     // Show labels on data points?
     settings.data.labels = settings.labels;

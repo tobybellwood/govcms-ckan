@@ -1,9 +1,30 @@
 <?php
-
 /**
  * @file
  * Code for the govCMS CKAN Display module.
  */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function govcms_ckan_display_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'govcms_ckan' && in_array($plugin, array_keys(govcms_ckan_ctools_plugin_type()))) {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function govcms_ckan_display_theme($existing, $type, $theme, $path) {
+  return array(
+    'ckan_empty_visualisation' => array(
+      'variables' => array('empty_text' => NULL),
+      'file' => 'theme/govcms_ckan.theme.inc',
+      'template' => 'theme/templates/govcms-ckan-empty-visualisation',
+    ),
+  );
+}
 
 /**
  * Implements hook_library().
@@ -55,22 +76,22 @@ function govcms_ckan_display_library() {
         'preprocess' => FALSE,
       ),
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.1.0/js/canvas-to-blob.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.1.0/js/canvas-to-blob.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
     ),
     'css' => array(
@@ -88,16 +109,16 @@ function govcms_ckan_display_library() {
     'version' => '1.1.2',
     'js' => array(
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
       array(
-	'type' => 'external',
-	'data' => 'https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.1.0/js/canvas-to-blob.min.js',
-	'group' => JS_LIBRARY,
-	'preprocess' => FALSE,
+        'type' => 'external',
+        'data' => 'https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.1.0/js/canvas-to-blob.min.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
       ),
     ),
   );
@@ -127,5 +148,37 @@ function govcms_ckan_display_add_charts($table_selector = NULL) {
         'tableChartSelectors' => array($table_selector),
       ),
     ), 'setting');
+  }
+}
+
+/**
+ * A helper to attach charts to a renderable element via a selector.
+ *
+ * Same as govcms_ckan_display_add_charts() but will attach to a form or
+ * renderable array rather than drupal_add_js/library.
+ *
+ * @param array $element
+ *   The element to attach to.
+ * @param string $table_selector
+ *   (optional) The jQuery selector for the tables you want to add charts to. If
+ *   NULL then only the libraries will be added.
+ */
+function govcms_ckan_display_attach_charts(&$element, $table_selector = NULL) {
+
+  // Include c3js library.
+  $element['#attached']['library'][] = array('govcms_ckan_display', 'c3js');
+  // Include filesaver library.
+  $element['#attached']['library'][] = array('govcms_ckan_display', 'filesaver');
+  // Include custom chart libs.
+  $element['#attached']['library'][] = array('govcms_ckan_display', 'govcms_ckan_charts');
+
+  // Add the table selector the charts will attach to.
+  if (!is_null($table_selector)) {
+    $settings = array(
+      'govcmsCkanDisplay' => array(
+        'tableChartSelectors' => array($table_selector),
+      ),
+    );
+    $element['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');
   }
 }

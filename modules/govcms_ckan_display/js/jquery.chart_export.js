@@ -52,7 +52,7 @@
       errorMsg: 'Sorry, your browser does not support this function.',
       // Manual download message.
       manualDownloadMessage: 'Your browser requires manual saving of this file, when redirected to the image, ' +
-	'right click and "Save {saveType} As..." to save it to your computer with the filename "{filename}"'
+        'right click and "Save {saveType} As..." to save it to your computer with the filename "{filename}"'
     };
 
     // Update defaults with passed settings.
@@ -64,9 +64,9 @@
     self.validateRequirements = function () {
       // TODO: Check html5 support.
       try {
-	var isFileSaverSupported = !!new Blob;
+        var isFileSaverSupported = !!new Blob;
       } catch (e) {
-	self.settings.valid = false;
+        self.settings.valid = false;
       }
 
       // Return self for chaining.
@@ -156,10 +156,10 @@
         context = canvas.getContext('2d');
         context.drawImage(image, 0, 0);
 
-	// Save using canvas-toBlob.js.
-	canvas.toBlob(function(blob){
-	  saveAs(blob, self.getFilename());
-	});
+        // Save using canvas-toBlob.js.
+        canvas.toBlob(function(blob){
+          saveAs(blob, self.getFilename());
+        });
       };
     };
 
@@ -178,8 +178,8 @@
       // @see https://github.com/eligrey/FileSaver.js/issues/12
       // So as a workaround we instruct the user on how to download.
       if (self.isSafari()) {
-	var saveType = 'png' === self.settings.format ? 'Image' : 'Page';
-	alert(self.settings.manualDownloadMessage.replace('{filename}', self.getFilename()).replace('{saveType}', saveType));
+        var saveType = 'png' === self.settings.format ? 'Image' : 'Page';
+        alert(self.settings.manualDownloadMessage.replace('{filename}', self.getFilename()).replace('{saveType}', saveType));
       }
 
       // Get the html for the svg.

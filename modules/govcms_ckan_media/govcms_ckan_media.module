@@ -6,6 +6,16 @@
 
 // Load all CKAN file formatters.
 require_once dirname(__FILE__) . '/includes/govcms_ckan_media.formatters.inc';
+require_once dirname(__FILE__) . '/includes/govcms_ckan_media.field_config.inc';
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function govcms_ckan_media_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'govcms_ckan' && in_array($plugin, array_keys(govcms_ckan_ctools_plugin_type()))) {
+    return 'plugins/' . $plugin;
+  }
+}
 
 /**
  * Implements hook_media_internet_providers().
@@ -65,5 +75,20 @@ function govcms_ckan_media_file_mimetype_mapping_alter(&$mapping) {
 function govcms_ckan_media_ctools_plugin_api($module, $api) {
   if ($module == 'file_entity' && $api == 'file_default_displays') {
     return array('version' => 1);
+  }
+}
+
+/**
+ * Implements hook_file_load().
+ */
+function govcms_ckan_media_file_load($files) {
+  // Load the resource_id and instance as properties of the file object.
+  foreach ($files as $i => $file) {
+    if ($file->type == 'ckan') {
+      $wrapper = file_stream_wrapper_get_instance_by_uri($file->uri);
+      $files[$i]->resource_id = $wrapper->parseIdFromUri('resource');
+      $files[$i]->package_id = $wrapper->parseIdFromUri('package');
+      $files[$i]->instance = $wrapper->parseIdFromUri('instance');
+    }
   }
 }
