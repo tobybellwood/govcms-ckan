@@ -101,8 +101,8 @@ class GovCmsCkanClient {
     $test_url = url(
       $this->apiUrl . $this->apiPath() . $resource,
       array(
-	'external' => TRUE,
-	'query' => $query,
+        'external' => TRUE,
+        'query' => $query,
       ));
 
     // Add authentication.
@@ -146,8 +146,8 @@ class GovCmsCkanClient {
     $this->url = url(
       $this->apiUrl . $this->apiPath() . $this->resource,
       array(
-	'external' => TRUE,
-	'query' => $this->query,
+        'external' => TRUE,
+        'query' => $this->query,
       ));
 
     // If no cache, we do a new request, parse and cache it.
@@ -155,7 +155,7 @@ class GovCmsCkanClient {
     if ($this->cacheDataGet() === FALSE) {
       // Make the request.
       $this->response = drupal_http_request($this->url, array(
-	'headers' => array('Authorization' => $this->apiKey),
+        'headers' => array('Authorization' => $this->apiKey),
       ));
 
       // Parse the response.
@@ -187,8 +187,12 @@ class GovCmsCkanClient {
       // TODO: Autodetect response format and handle errors if not JSON?
       $data = json_decode($this->response->data);
       $this->responseObject->data = $data->result;
+      // There is a possibility that we get a 200 code but failed request.
+      // @see http://docs.ckan.org/en/latest/api/#making-an-api-request
+      $this->responseObject->valid = $data->success;
     }
-    else {
+
+    if (!$this->responseObject->valid) {
       $this->errorLogger();
     }
   }
@@ -218,9 +222,9 @@ class GovCmsCkanClient {
     watchdog('govcms_ckan_client',
       'Error requesting data from CKAN endpont: @url - Error @code - @status',
       array(
-	'@url' => $this->url,
-	'@code' => $this->response->code,
-	'@status' => $this->response->status_message,
+        '@url' => $this->url,
+        '@code' => $this->response->code,
+        '@status' => $this->response->status_message,
       ),
       WATCHDOG_ERROR);
   }

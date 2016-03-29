@@ -111,46 +111,16 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
   $element['export_width'] = array(
     '#title' => t('Width'),
     '#type' => 'textfield',
-    '#default_value' => $settings['width'],
+    '#default_value' => $settings['export_width'],
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('A pixel value (without unit). Applied when exporting as an image.'),
+    '#description' => t('A pixel value (without unit). Applied when exporting as an image. Leave blank for auto sizing.'),
   );
   $element['export_height'] = array(
     '#title' => t('Height'),
     '#type' => 'textfield',
-    '#default_value' => $settings['height'],
+    '#default_value' => $settings['export_height'],
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('A pixel value (without unit). Applied when exporting as an image.'),
-  );
-
-  $element['x_tick_count'] = array(
-    '#title' => t('X Tick Count'),
-    '#type' => 'textfield',
-    '#default_value' => $settings['x_tick_count'],
-    '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The number of ticks on the X axis.'),
-  );
-  $element['y_tick_count'] = array(
-    '#title' => t('Y Tick Count'),
-    '#type' => 'textfield',
-    '#default_value' => $settings['y_tick_count'],
-    '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The number of ticks on the Y axis.'),
-  );
-
-  $element['x_tick_cull'] = array(
-    '#title' => t('X Label Count'),
-    '#type' => 'textfield',
-    '#default_value' => $settings['x_tick_cull'],
-    '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The max number of labels on the Xaxis.'),
-  );
-  $element['y_tick_cull'] = array(
-    '#title' => t('Y Label Count'),
-    '#type' => 'textfield',
-    '#default_value' => $settings['y_tick_cull'],
-    '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The max number of labels on the Y axis.'),
+    '#description' => t('A pixel value (without unit). Applied when exporting as an image. Leave blank for auto sizing.'),
   );
 
   // TODO: Add validator.

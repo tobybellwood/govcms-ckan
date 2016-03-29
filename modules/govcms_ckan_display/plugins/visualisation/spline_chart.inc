@@ -10,9 +10,15 @@ $plugin = array(
     'rotated' => 'false',
     'area' => 0,
     'show_labels' => 0,
+    'grid' => NULL,
     'x_label' => NULL,
     'y_label' => NULL,
-    'grid' => NULL,
+    'axis_settings' => array(
+      'x_tick_count' => NULL,
+      'y_tick_count' => NULL,
+      'x_tick_cull' => NULL,
+      'y_tick_cull' => NULL,
+    ),
   ),
 );
 
@@ -44,12 +50,12 @@ function govcms_ckan_display_spline_chart_view($file, $display, $config) {
       'data-grid' => $config['grid'],
       'data-xLabel' => $config['x_label'],
       'data-yLabel' => $config['y_label'],
+      'data-xTickCount' => $config['axis_settings']['x_tick_count'],
+      'data-yTickCount' => $config['axis_settings']['y_tick_count'],
+      'data-xTickCull' => $config['axis_settings']['x_tick_cull'],
+      'data-yTickCull' => $config['axis_settings']['y_tick_cull'],
 
       // Display settings.
-      'data-xTickCount' => $config['x_tick_count'],
-      'data-yTickCount' => $config['y_tick_count'],
-      'data-xTickCull' => $config['x_tick_cull'],
-      'data-yTickCull' => $config['y_tick_cull'],
       'data-palette' => $config['palette'],
       'data-exportWidth' => $config['export_width'],
       'data-exportHeight' => $config['export_height'],
@@ -70,8 +76,12 @@ function govcms_ckan_display_spline_chart_view($file, $display, $config) {
       $parser->setGroupKey($config['split']);
     }
 
-    // Parse the data into tables.
-    $element = $parser->parse();
+    // Return the parsed tables in a wrapper.
+    $element = array(
+      '#theme' => 'ckan_display_table_wrapper',
+      '#tables' => $parser->parse(),
+      '#show_titles' => !empty($config['split']),
+    );
 
     // Add the JS to the tables.
     govcms_ckan_display_attach_charts($element, '.' . $chart_class);
@@ -109,18 +119,6 @@ function govcms_ckan_display_spline_chart_configure($plugin, $form, $form_state,
     '#default_value' => $config['show_labels'],
   );
 
-  $config_form['x_label'] = array(
-    '#type' => 'textfield',
-    '#title' => t('X axis label'),
-    '#default_value' => $config['x_label'],
-  );
-
-  $config_form['y_label'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Y axis label'),
-    '#default_value' => $config['y_label'],
-  );
-
   $config_form['grid'] = array(
     '#type' => 'select',
     '#title' => t('Enable grid'),
@@ -132,6 +130,10 @@ function govcms_ckan_display_spline_chart_configure($plugin, $form, $form_state,
       'xy' => t('Both X and Y lines'),
     ),
   );
+
+  // Add axis settings.
+  $axis_config_form = govcms_ckan_media_visualisation_default_axis_config($form, $form_state, $config);
+  $config_form = array_merge($config_form, $axis_config_form);
 
   return $config_form;
 }

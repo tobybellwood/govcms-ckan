@@ -164,11 +164,11 @@ function govcms_ckan_get_plugin_config_form($name, $form, $form_state, $config) 
 }
 
 /**
- * Helper function to return a specific visualisation plugin config form.
+ * Helper function to return a specific visualisation plugin view.
  *
  * @param string $name
  *   The name of the visualisation plugin to return.
- * @param array $file
+ * @param object $file
  *   The file object.
  * @param array $display
  *   The current display information and config.
