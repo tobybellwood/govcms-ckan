@@ -6,6 +6,10 @@
 
 $plugin = array(
   'title' => t('Table visualisation'),
+  'ckan_filters' => array(
+    'search' => NULL,
+    'filters' => NULL,
+  ),
 );
 
 /**
@@ -15,7 +19,7 @@ function govcms_ckan_media_table_view($file, $display, $config) {
   $element = array();
   $chart_class = 'ckan-table';
   $parser = govcms_ckan_dataset_parser();
-  $response = govcms_ckan_client_request_records($file->resource_id);
+  $response = govcms_ckan_client_request_records($file->resource_id, $config['ckan_filters']['search'], $config['ckan_filters']['filters']);
 
   // If failure, provide error message.
   if ($response->valid !== FALSE) {

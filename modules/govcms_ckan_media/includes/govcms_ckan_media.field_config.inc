@@ -279,6 +279,44 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
     $options['all'][$field->id] = $field->id;
   }
 
+  // Optional filter and query parameters.
+  $form['ckan_filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('CKAN data filters'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  // Default values for query string.
+  if (isset($config['ckan_filters']['search'])) {
+    $ckan_query_default = $config['ckan_filters']['search'];
+  }
+  else {
+    $ckan_query_default = '';
+  }
+
+  $form['ckan_filters']['search'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Full text query'),
+    '#description' => t('Optionally query entire dataset for any string value.'),
+    '#default_value' => $ckan_query_default,
+  );
+
+  // Default values for key/value filters.
+  if (isset($config['ckan_filters']['filters'])) {
+    $ckan_filters_default = $config['ckan_filters']['filters'];
+  }
+  else {
+    $ckan_filters_default = '';
+  }
+
+  $form['ckan_filters']['filters'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Filters'),
+    '#description' => t('Filter on key/value dictionary. For example: {"code": "4000", "year": "2016"}.'),
+    '#default_value' => $ckan_filters_default,
+  );
+
   // Build the elements.
   $form['keys'] = array(
     '#type' => 'checkboxes',

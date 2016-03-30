@@ -211,9 +211,19 @@ function govcms_ckan_client() {
  * @return object
  *   A client response object.
  */
-function govcms_ckan_client_request_records($resource_id = NULL) {
+function govcms_ckan_client_request_records($resource_id = NULL, $search = NULL, $filters = NULL) {
   $client = govcms_ckan_client();
-  return $client->get('action/datastore_search', array('id' => $resource_id));
+  $query = array('id' => $resource_id);
+
+  if (!empty($search)) {
+    $query += array('q' => $search);
+  }
+
+  if (!empty ($filters)) {
+    $query += array('filters' => $filters);
+  }
+
+  return $client->get('action/datastore_search', $query);
 }
 
 /**
