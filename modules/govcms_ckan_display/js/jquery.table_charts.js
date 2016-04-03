@@ -259,7 +259,7 @@
      */
     self.toggleView = function () {
       self.$chart.toggle();
-      self.settings.$dom.toggle();
+      self.$tableWrapper.toggle();
       // Update button text.
       self.$toggle.html(self.toggleButtonText(self.currentView));
       // Update current view.
@@ -277,23 +277,28 @@
       self.$chart = $('<div>');
       self.$toggle = $('<button>');
 
-      // Give the table a unique class.
-      self.settings.$dom.addClass(self.settings.component + '--table');
+      // Give the table a unique class and give it a wrapper.
+      self.settings.$dom
+        .addClass(self.settings.component + '--table')
+        .wrap('<div class="' + self.settings.component + '--table-wrapper"></div>');
+
+      // Store the wrapper as we use this to toggle visibility.
+      self.$tableWrapper = self.settings.$dom.parent();
 
       // Add a toggle button after the table.
       self.$toggle.html(self.toggleButtonText())
         .addClass(self.settings.component + '--toggle')
         .click(self.toggleView)
-        .insertAfter(self.settings.$dom);
+        .insertAfter(self.$tableWrapper);
 
       // Add chart placeholder to dom with a unique Id.
       self.$chart.attr('id', self.settings.chartDomId)
         .addClass(self.settings.component + '--chart')
-        .insertAfter(self.settings.$dom);
+        .insertAfter(self.$tableWrapper);
 
       // Display only table or chart depending on defaultView.
       if (self.settings.defaultView === self.settings.chartViewName) {
-        self.settings.$dom.hide();
+        self.$tableWrapper.hide();
       } else {
         self.$chart.hide();
       }
