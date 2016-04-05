@@ -9,6 +9,7 @@ $plugin = array(
   'settings' => array(
     'rotated' => 'false',
     'stacked' => 0,
+    'show_labels' => 0,
     'grid' => NULL,
     'x_label' => NULL,
     'y_label' => NULL,
@@ -46,6 +47,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       // Entity settings.
       'data-rotated' => $config['rotated'],
       'data-stacked' => ($config['stacked'] == 1 ? 'true' : 'false'),
+      'data-labels' => ($config['show_labels'] == 1 ? 'true' : 'false'),
       'data-grid' => $config['grid'],
       'data-xLabel' => $config['x_label'],
       'data-yLabel' => $config['y_label'],
@@ -104,6 +106,12 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $c
       'false' => t('Vertical'),
       'true' => t('Horizontal'),
     ),
+  );
+
+  $config_form['show_labels'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable data labels'),
+    '#default_value' => $config['show_labels'],
   );
 
   $config_form['stacked'] = array(
