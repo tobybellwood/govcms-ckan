@@ -323,6 +323,12 @@ class GovCmsCkanDatasetParser {
       $row = array();
       // For each key.
       foreach ($keys as $key) {
+        // If label key is disabled ignore the 'none' key and continue.
+        if (empty($key)) {
+	  $row[] = NULL;
+          continue;
+        }
+
         // If it is a label key, it forms an x tick cell, otherwise data.
         $row[] = $this->labelKey == $key ? $this->createHeaderCell('row', $record->{$key}) : $record->{$key};
       }

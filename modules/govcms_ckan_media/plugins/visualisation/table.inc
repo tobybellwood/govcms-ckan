@@ -46,6 +46,12 @@ function govcms_ckan_media_table_view($file, $display, $config) {
  * Configure form callback.
  */
 function govcms_ckan_media_table_configure($plugin, $form, $form_state, $config) {
+  // Get default key elements.
+  $config_form = govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config, 'all');
+
+  // Allow for an empty selection on label key.
+  $config_form['labels']['#empty_option'] = t('None');
+
   // Return basic key configuration.
-  return govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config);
+  return $config_form;
 }
