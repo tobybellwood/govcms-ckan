@@ -20,6 +20,10 @@ $plugin = array(
       'x_tick_cull' => NULL,
       'y_tick_cull' => NULL,
     ),
+    'ckan_filters' => array(
+      'search' => NULL,
+      'filters' => NULL,
+    ),
   ),
 );
 
@@ -29,7 +33,9 @@ $plugin = array(
 function govcms_ckan_display_spline_chart_view($file, $display, $config) {
   $element = array();
   $chart_class = 'ckan-spline-chart';
-  $response = govcms_ckan_client_request_records($file->resource_id);
+  $ckan_search = $config['ckan_filters']['search'];
+  $ckan_filters = $config['ckan_filters']['filters'];
+  $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
 
   // If failure, provide error message.
   if ($response->valid === FALSE) {
