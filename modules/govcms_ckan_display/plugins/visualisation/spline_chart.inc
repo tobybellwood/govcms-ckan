@@ -11,6 +11,7 @@ $plugin = array(
     'area' => 0,
     'show_labels' => 0,
     'grid' => NULL,
+    'palette_override' => NULL,
     'x_label' => NULL,
     'y_label' => NULL,
     'axis_settings' => array(
@@ -56,7 +57,7 @@ function govcms_ckan_display_spline_chart_view($file, $display, $config) {
       'data-yTickCull' => $config['axis_settings']['y_tick_cull'],
 
       // Display settings.
-      'data-palette' => $config['palette'],
+      'data-palette' => (!empty($config['palette_override']) ? $config['palette_override'] : $config['palette']),
       'data-exportWidth' => $config['export_width'],
       'data-exportHeight' => $config['export_height'],
     );
@@ -117,6 +118,13 @@ function govcms_ckan_display_spline_chart_configure($plugin, $form, $form_state,
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
     '#default_value' => $config['show_labels'],
+  );
+
+  $config_form['palette_override'] = array(
+    '#title' => t('Palette override'),
+    '#type' => 'textfield',
+    '#default_value' => $config['palette_override'],
+    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
   );
 
   $config_form['grid'] = array(
