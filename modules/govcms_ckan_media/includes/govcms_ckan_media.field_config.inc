@@ -241,7 +241,7 @@ function _govcms_ckan_media_field_widget_visualisation_options() {
  * @return array
  *   Form structure for new elements.
  */
-function govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config = array()) {
+function govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config = array(), $key_type = 'numeric') {
   $form = array();
 
   // We need a resource_id, however this file might not be saved yet, if it is
@@ -321,7 +321,7 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
   $form['keys'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Keys'),
-    '#options' => $options['numeric'],
+    '#options' => $options[$key_type],
     '#default_value' => $config['keys'],
     '#multiple' => TRUE,
     '#required' => TRUE,
