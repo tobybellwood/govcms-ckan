@@ -35,7 +35,7 @@ function govcms_ckan_media_enable() {
   // module to be enabled so it cannot be called in hook_install(). This is not
   // ideal as we really only want it created when the module is installed.
   // TODO: Find workaround.
-  cache_clear_all('field_info_types:', 'cache_field', TRUE);
+  field_info_cache_clear();
   _govcms_ckan_media_create_config_field('file', 'ckan');
 }
 
