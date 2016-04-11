@@ -105,6 +105,7 @@
       exportWidth: '',
       exportHeight: '',
       yRound: 4,
+      barWidth: 0.5,
       // The data for the chart.
       columns: [],
       data: {},
@@ -114,7 +115,7 @@
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
         'xTickCount', 'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight',
-        'yRound'],
+        'barWidth', 'yRound'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -483,6 +484,11 @@
       case 'y':
         options.grid = {y: {show: true}};
         break;
+    }
+
+    // Provide a width ratio for bars.
+    if (settings.type == 'bar') {
+      options.bar = {width: {ratio: settings.barWidth}}
     }
 
     // Create chart.
