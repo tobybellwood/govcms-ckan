@@ -15,6 +15,7 @@ $plugin = array(
     'x_label' => NULL,
     'y_label' => NULL,
     'axis_settings' => array(
+      'x_tick_rotate' => 0,
       'x_tick_count' => NULL,
       'y_tick_count' => NULL,
       'x_tick_cull' => NULL,
@@ -57,6 +58,7 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       'data-grid' => $config['grid'],
       'data-xLabel' => $config['x_label'],
       'data-yLabel' => $config['y_label'],
+      'data-xTickRotate' => ($config['axis_settings']['x_tick_rotate'] == 1 ? '90' : '0'),
       'data-xTickCount' => $config['axis_settings']['x_tick_count'],
       'data-yTickCount' => $config['axis_settings']['y_tick_count'],
       'data-xTickCull' => $config['axis_settings']['x_tick_cull'],

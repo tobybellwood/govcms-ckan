@@ -25,6 +25,7 @@
    * -- data-grid: Grid lines to use: xy, x or y
    * -- data-xLabel: The optional label to show on the X axis
    * -- data-yLabel: The optional label to show on the Y axis
+   * -- data-xTickRotate: The angle to rotate X axis labels
    * -- data-xTickCount: The count of ticks on the X axis
    * -- data-yTickCount: The count of ticks on the Y axis
    * -- data-xTickCull: The max count of labels on the X axis
@@ -95,6 +96,7 @@
       grid: null,
       xLabel: null,
       yLabel: null,
+      xTickRotate: 0,
       xTickCount: null,
       yTickCount: null,
       xTickCull: null,
@@ -103,6 +105,7 @@
       exportWidth: '',
       exportHeight: '',
       yRound: 4,
+      barWidth: 0.5,
       // The data for the chart.
       columns: [],
       data: {},
@@ -110,8 +113,9 @@
       // The labels to show on the x axis ticks.
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
-      dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickCount',
-        'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight', 'yRound'],
+      dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
+        'xTickCount', 'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight',
+        'barWidth', 'yRound'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -415,6 +419,11 @@
       y: {label: settings.yLabel, tick: {}}
     };
 
+    // Define the tick rotation.
+    if (settings.xTickRotate != 0) {
+      axis.x.tick.rotate = parseInt(settings.xTickRotate);
+    }
+
     // Define the tick counts.
     if (settings.xTickCount) {
       axis.x.tick.count = parseInt(settings.xTickCount);
@@ -475,6 +484,11 @@
       case 'y':
         options.grid = {y: {show: true}};
         break;
+    }
+
+    // Provide a width ratio for bars.
+    if (settings.type == 'bar') {
+      options.bar = {width: {ratio: settings.barWidth}}
     }
 
     // Create chart.

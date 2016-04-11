@@ -7,6 +7,7 @@
 $plugin = array(
   'title' => t('Bar chart'),
   'settings' => array(
+    'bar_width' => 0.5,
     'rotated' => 'false',
     'stacked' => 0,
     'show_labels' => 0,
@@ -15,6 +16,7 @@ $plugin = array(
     'x_label' => NULL,
     'y_label' => NULL,
     'axis_settings' => array(
+      'x_tick_rotate' => 0,
       'x_tick_count' => NULL,
       'y_tick_count' => NULL,
       'x_tick_cull' => NULL,
@@ -52,12 +54,14 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       'data-type' => 'bar',
 
       // Entity settings.
+      'data-barWidth' => $config['bar_width'],
       'data-rotated' => $config['rotated'],
       'data-stacked' => ($config['stacked'] == 1 ? 'true' : 'false'),
       'data-labels' => ($config['show_labels'] == 1 ? 'true' : 'false'),
       'data-grid' => $config['grid'],
       'data-xLabel' => $config['x_label'],
       'data-yLabel' => $config['y_label'],
+      'data-xTickRotate' => ($config['axis_settings']['x_tick_rotate'] == 1 ? '90' : '0'),
       'data-xTickCount' => $config['axis_settings']['x_tick_count'],
       'data-yTickCount' => $config['axis_settings']['y_tick_count'],
       'data-xTickCull' => $config['axis_settings']['x_tick_cull'],
@@ -119,6 +123,17 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $c
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
     '#default_value' => $config['show_labels'],
+  );
+
+  $config_form['bar_width'] = array(
+    '#type' => 'select',
+    '#title' => t('Bar width'),
+    '#default_value' => $config['bar_width'],
+    '#options' => array(
+      '0.5' => t('Standard'),
+      '0.3' => t('Thin'),
+      '0.75' => t('Thick'),
+    ),
   );
 
   $config_form['stacked'] = array(
