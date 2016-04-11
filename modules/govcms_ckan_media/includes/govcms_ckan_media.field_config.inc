@@ -403,7 +403,13 @@ function govcms_ckan_media_visualisation_default_axis_config($form, $form_state,
     '#collapsed' => TRUE,
   );
 
-  // Limit tick count.
+  // Tick settings.
+  $element['axis_settings']['x_tick_rotate'] = array(
+    '#title' => t('X labels vertical'),
+    '#type' => 'checkbox',
+    '#default_value' => $config['axis_settings']['x_tick_rotate'],
+    '#description' => t('Check to rotate the X axis labels 90 degrees.'),
+  );
   $element['axis_settings']['x_tick_count'] = array(
     '#title' => t('X Tick Count'),
     '#type' => 'textfield',

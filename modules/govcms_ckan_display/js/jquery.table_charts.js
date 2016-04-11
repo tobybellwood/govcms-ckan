@@ -25,6 +25,7 @@
    * -- data-grid: Grid lines to use: xy, x or y
    * -- data-xLabel: The optional label to show on the X axis
    * -- data-yLabel: The optional label to show on the Y axis
+   * -- data-xTickRotate: The angle to rotate X axis labels
    * -- data-xTickCount: The count of ticks on the X axis
    * -- data-yTickCount: The count of ticks on the Y axis
    * -- data-xTickCull: The max count of labels on the X axis
@@ -95,6 +96,7 @@
       grid: null,
       xLabel: null,
       yLabel: null,
+      xTickRotate: 0,
       xTickCount: null,
       yTickCount: null,
       xTickCull: null,
@@ -110,8 +112,9 @@
       // The labels to show on the x axis ticks.
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
-      dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickCount',
-        'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight', 'yRound'],
+      dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
+        'xTickCount', 'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight',
+        'yRound'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -414,6 +417,11 @@
       x: {label: settings.xLabel, tick: {}},
       y: {label: settings.yLabel, tick: {}}
     };
+
+    // Define the tick rotation.
+    if (settings.xTickRotate != 0) {
+      axis.x.tick.rotate = parseInt(settings.xTickRotate);
+    }
 
     // Define the tick counts.
     if (settings.xTickCount) {
