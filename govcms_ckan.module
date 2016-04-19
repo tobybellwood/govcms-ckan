@@ -242,8 +242,14 @@ function govcms_ckan_client_request_meta($resource_id = NULL) {
 
 /**
  * Helper to return a new instance of the CKAN DataSet parser.
+ *
+ * @param object $result
+ *   Instantiate with result set, this can also be done later with setResult.
+ *
+ * @return object
+ *   An instance of the ckan dataset parser.
  */
-function govcms_ckan_dataset_parser() {
+function govcms_ckan_dataset_parser($result = NULL) {
   module_load_include('inc', 'govcms_ckan', 'src/GovCmsCkanDatasetParser');
-  return new GovCmsCkanDatasetParser();
+  return new GovCmsCkanDatasetParser($result);
 }

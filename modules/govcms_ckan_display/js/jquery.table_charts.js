@@ -86,6 +86,8 @@
       chartDomId: 'table-chart-0',
       // The type of chart.
       type: 'line',
+      // Type override with the key/type.
+      types: {},
       // The tableChartChart class used to create the chart.
       chart: 'c3js',
       // Chart settings.
@@ -184,6 +186,11 @@
       // @see http://c3js.org/samples/simple_regions.html
       if ($cell.data('style') !== undefined && $cell.data('style') === 'dashed') {
         self.settings.styles.push({set: $cell.html(), style: $cell.data('style')});
+      }
+
+      // Allows a column/heading to define its graph type, overriding the default.
+      if ($cell.data('type') !== undefined) {
+        self.settings.types[$cell.html()] = $cell.data('type');
       }
 
       // Create a group of headings (used for stacking).
@@ -457,6 +464,9 @@
     // Show labels on data points?
     settings.data.labels = settings.labels;
 
+    // Add any overrides to graph types based on the column.
+    settings.data.types = settings.types;
+
     // Add the data columns.
     $(settings.columns).each(function (i, col) {
       settings.data.columns.push(col);
@@ -490,6 +500,11 @@
     if (settings.type == 'bar') {
       options.bar = {width: {ratio: settings.barWidth}}
     }
+
+    //options.data.types = {
+    //  CriticallyEndangered: 'spline'
+    //};
+    console.log(options);
 
     // Create chart.
     c3.generate(options);

@@ -66,8 +66,14 @@ class GovCmsCkanDatasetParser {
 
   /**
    * GovCmsCkanDatasetParser constructor.
+   *
+   * @param object $result
+   *   Instantiate with result set, this can also be done later with setResult.
    */
-  public function __construct() {
+  public function __construct($result = NULL) {
+    if (!empty($result)) {
+      $this->setResult($result);
+    }
   }
 
   /**
@@ -174,6 +180,27 @@ class GovCmsCkanDatasetParser {
   public function setTableAttributes($attributes) {
     $this->tableAttributes = array_merge($this->tableAttributes, $attributes);
     return $this;
+  }
+
+  /**
+   * Return the unique labels for a given key.
+   *
+   * @param string $key
+   *   The key to filter by.
+   *
+   * @return array
+   *   An array of keys
+   */
+  public function getUniqueLabels($key = NULL) {
+    $labels = array();
+    if (!empty($this->records) || !empty($key)) {
+      foreach ($this->records as $record) {
+        if (isset($record->{$key})) {
+          $labels[$record->{$key}] = $record->{$key};
+        }
+      }
+    }
+    return $labels;
   }
 
   /**

@@ -1,15 +1,14 @@
 <?php
 /**
  * @file
- * Bar chart visualisation.
+ * Multi visualisation chart.
  */
 
 $plugin = array(
-  'title' => t('Bar chart'),
+  'title' => t('Multi visualisation chart'),
   'settings' => array(
-    'bar_width' => 0.5,
     'rotated' => 'false',
-    'stacked' => 0,
+    'area' => 0,
     'show_labels' => 0,
     'grid' => NULL,
     'palette_override' => NULL,
@@ -32,15 +31,12 @@ $plugin = array(
 /**
  * Returns a renderable array that represents the block content.
  */
-function govcms_ckan_display_bar_chart_view($file, $display, $config) {
+function govcms_ckan_display_multi_chart_view($file, $display, $config) {
   $element = array();
-  $chart_class = 'ckan-bar-chart';
+  $chart_class = 'ckan-spline-chart';
   $ckan_search = $config['ckan_filters']['search'];
   $ckan_filters = $config['ckan_filters']['filters'];
   $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
-
-
-  dsm($config);
 
   // If failure, provide error message.
   if ($response->valid === FALSE) {
@@ -54,12 +50,10 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
     // Attributes for the table.
     $attributes = array(
       'class' => array('ckan-chart', $chart_class),
-      'data-type' => 'bar',
 
       // Entity settings.
-      'data-barWidth' => $config['bar_width'],
+      'data-type' => ($config['area'] == 1 ? 'area-spline' : 'spline'),
       'data-rotated' => $config['rotated'],
-      'data-stacked' => ($config['stacked'] == 1 ? 'true' : 'false'),
       'data-labels' => ($config['show_labels'] == 1 ? 'true' : 'false'),
       'data-grid' => $config['grid'],
       'data-xLabel' => $config['x_label'],
@@ -83,21 +77,18 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       ->setKeys($keys)
       ->setLabelKey($config['labels'])
       ->setHeaderSource($config['x_axis_grouping'])
-      ->setTableAttributes($attributes);
+      ->setTableAttributes($attributes)
+      ->parse();
 
     // If splitting on the value of a key.
     if ($config['split']) {
       $parser->setGroupKey($config['split']);
     }
 
-    $tables = $parser->parse();
-    $tables[2011]['#header'][3] = array('data' => $tables[2011]['#header'][3], 'data-type' => 'spline');
-    dsm($tables);
-
     // Return the parsed tables in a wrapper.
     $element = array(
       '#theme' => 'ckan_display_table_wrapper',
-      '#tables' => $tables,
+      '#tables' => $parser->parse(),
       '#show_titles' => !empty($config['split']),
     );
 
@@ -111,7 +102,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
 /**
  * Configure form callback.
  */
-function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $config) {
+function govcms_ckan_display_multi_chart_configure($plugin, $form, $form_state, $config) {
   // Get default key elements.
   $config_form = govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config);
 
@@ -125,27 +116,16 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $c
     ),
   );
 
+  $config_form['area'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable area'),
+    '#default_value' => $config['area'],
+  );
+
   $config_form['show_labels'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
     '#default_value' => $config['show_labels'],
-  );
-
-  $config_form['bar_width'] = array(
-    '#type' => 'select',
-    '#title' => t('Bar width'),
-    '#default_value' => $config['bar_width'],
-    '#options' => array(
-      '0.5' => t('Standard'),
-      '0.3' => t('Thin'),
-      '0.75' => t('Thick'),
-    ),
-  );
-
-  $config_form['stacked'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Is this stacked'),
-    '#default_value' => $config['stacked'],
   );
 
   $config_form['palette_override'] = array(
