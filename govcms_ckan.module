@@ -253,3 +253,30 @@ function govcms_ckan_dataset_parser($result = NULL) {
   module_load_include('inc', 'govcms_ckan', 'src/GovCmsCkanDatasetParser');
   return new GovCmsCkanDatasetParser($result);
 }
+
+/**
+ * Turn a string of key value pairs separated by new lines and pipes into array.
+ *
+ * It is a shame drupal doesn't have a helper for this, the closest thing is
+ * list_extract_allowed_values() however it is very specific to the list module
+ * so this is a simplified version.
+ *
+ * @param string $string
+ *   The string input, generally user entered content int a textarea.
+ *
+ * @return array
+ *   A key value array, each new line in the string forms a new array item keyed
+ *   by the pipe prefix and value is the pipe suffix.
+ */
+function govcms_ckan_string_to_array($string) {
+  $values = array();
+  $list = explode("\n", $string);
+  $list = array_map('trim', $list);
+  foreach ($list as $row) {
+    if (!empty($row) && strpos($row, '|') !== FALSE) {
+      list($key, $value) = explode('|', $row, 2);
+      $values[filter_xss($key)] = filter_xss($value);
+    }
+  }
+  return $values;
+}

@@ -329,7 +329,6 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
     '#description' => t('What data to display in the visualisation.'),
   );
 
-
   $col_override_id = 'col-override-settings';
   $x_axis_grouping = isset($config['x_axis_grouping']) ? $config['x_axis_grouping'] : 'keys';
   $form['x_axis_grouping'] = array(
@@ -368,23 +367,24 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
     '#description' => t('Optionally spit into multiple visualisations based on the value of this key.'),
   );
 
-  $form['col_overrides'] = array(
+  $form['column_overrides'] = array(
     '#prefix' => '<div id="' . $col_override_id . '">',
     '#suffix' => '</div>',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
     '#type' => 'fieldset',
     '#title' => t('Column overrides'),
     '#description' => t('Optionally override a style for a specific column, add one key|value per line and separate key value with a pipe.<br />Examples: <b>type|line</b> or <b>color|#000000</b> or <b>style|dashed</b>.'),
   );
 
-  // Get the columns in use and make a text area for each one to store settings.
-  $unique_labels = $parser->getUniqueLabels($config['labels']);
-  $columns = $x_axis_grouping == 'keys' ? $options['all'] : $unique_labels;
+  // Get the columns in use and make a text area for each to store its settings.
+  $columns = $x_axis_grouping == 'keys' ? $options['all'] : $parser->getUniqueLabels($config['labels']);
   foreach ($columns as $column) {
-    $form['col_overrides'][$column] = array(
+    $form['column_overrides'][$column] = array(
       '#type' => 'textarea',
       '#rows' => 2,
       '#title' => filter_xss($column),
-      '#default_value' => isset($config['col_overrides'][$column]) ? $config['col_overrides'][$column] : NULL,
+      '#default_value' => isset($config['column_overrides'][$column]) ? $config['column_overrides'][$column] : NULL,
     );
   }
 

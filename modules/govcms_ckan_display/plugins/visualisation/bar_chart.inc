@@ -15,6 +15,7 @@ $plugin = array(
     'palette_override' => NULL,
     'x_label' => NULL,
     'y_label' => NULL,
+    'column_overrides' => array(),
     'axis_settings' => array(
       'x_tick_rotate' => 0,
       'x_tick_count' => NULL,
@@ -39,9 +40,6 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
   $ckan_filters = $config['ckan_filters']['filters'];
   $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
 
-
-  dsm($config);
-
   // If failure, provide error message.
   if ($response->valid === FALSE) {
     $element['#theme'] = 'ckan_empty_visualisation';
@@ -50,6 +48,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
 
     // Setup our configuration.
     $keys = array_filter($config['keys']);
+    $column_overrides = govcms_ckan_display_parse_column_overrides($config['column_overrides']);
 
     // Attributes for the table.
     $attributes = array(
@@ -77,27 +76,23 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
     );
 
     // Parse the data.
-    $parser = govcms_ckan_dataset_parser();
+    $parser = govcms_ckan_dataset_parser($response->data);
     $parser
-      ->setResult($response->data)
       ->setKeys($keys)
       ->setLabelKey($config['labels'])
       ->setHeaderSource($config['x_axis_grouping'])
-      ->setTableAttributes($attributes);
+      ->setTableAttributes($attributes)
+      ->setColumnAttributes($column_overrides);
 
     // If splitting on the value of a key.
     if ($config['split']) {
       $parser->setGroupKey($config['split']);
     }
 
-    $tables = $parser->parse();
-    $tables[2011]['#header'][3] = array('data' => $tables[2011]['#header'][3], 'data-type' => 'spline');
-    dsm($tables);
-
     // Return the parsed tables in a wrapper.
     $element = array(
       '#theme' => 'ckan_display_table_wrapper',
-      '#tables' => $tables,
+      '#tables' => $parser->parse(),
       '#show_titles' => !empty($config['split']),
     );
 

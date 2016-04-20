@@ -9,6 +9,7 @@ $plugin = array(
   'ckan_filters' => array(
     'search' => NULL,
     'filters' => NULL,
+    'column_overrides' => array(),
   ),
 );
 
@@ -18,7 +19,6 @@ $plugin = array(
 function govcms_ckan_media_table_view($file, $display, $config) {
   $element = array();
   $chart_class = 'ckan-table';
-  $parser = govcms_ckan_dataset_parser();
   $response = govcms_ckan_client_request_records($file->resource_id, $config['ckan_filters']['search'], $config['ckan_filters']['filters']);
 
   // If failure, provide error message.
@@ -33,13 +33,14 @@ function govcms_ckan_media_table_view($file, $display, $config) {
     );
 
     // Parse the data.
+    $parser = govcms_ckan_dataset_parser($response->data);
     $element = $parser
-      ->setResult($response->data)
       ->setKeys($keys)
       ->setLabelKey($config['labels'])
       ->setGroupKey($config['split'])
       ->setHeaderSource('keys')
       ->setTableAttributes($attributes)
+      ->setColumnAttributes($config['column_overrides'])
       ->parse();
   }
 

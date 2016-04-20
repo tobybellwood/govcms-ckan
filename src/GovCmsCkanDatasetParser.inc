@@ -65,6 +65,11 @@ class GovCmsCkanDatasetParser {
   private $tableAttributes = array();
 
   /**
+   * Attributes for a specific column.
+   */
+  private $columnAttributes = array();
+
+  /**
    * GovCmsCkanDatasetParser constructor.
    *
    * @param object $result
@@ -177,8 +182,23 @@ class GovCmsCkanDatasetParser {
    * @return $this
    *   Return self for chaining.
    */
-  public function setTableAttributes($attributes) {
+  public function setTableAttributes($attributes = array()) {
     $this->tableAttributes = array_merge($this->tableAttributes, $attributes);
+    return $this;
+  }
+
+  /**
+   * Adds attributes to the column headers.
+   *
+   * @param array $column_attributes
+   *   An array keyed by the column/td value with its value being an array of
+   *   attributes to be added to that td.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setColumnAttributes($column_attributes = array()) {
+    $this->columnAttributes = $column_attributes;
     return $this;
   }
 
@@ -302,6 +322,10 @@ class GovCmsCkanDatasetParser {
     if (empty($value) && $scope == 'col') {
       $cell['data-placeholder'] = 'true';
     }
+    elseif ($scope == 'col' && !empty($this->columnAttributes[$value])) {
+      // Add any additional column attributes.
+      $cell = array_merge($cell, $this->columnAttributes[$value]);
+    }
     return $cell;
   }
 
@@ -343,7 +367,7 @@ class GovCmsCkanDatasetParser {
 
     // Add keys as header.
     foreach ($keys as $key) {
-      $table['header'][] = $this->labelKey == $key ? $this->createHeaderCell('col') : $key;
+      $table['header'][] = $this->labelKey == $key ? $this->createHeaderCell('col') : $this->createHeaderCell('col', $key);
     }
 
     // For each record.
@@ -353,7 +377,7 @@ class GovCmsCkanDatasetParser {
       foreach ($keys as $key) {
         // If label key is disabled ignore the 'none' key and continue.
         if (empty($key)) {
-	  $row[] = NULL;
+	        $row[] = NULL;
           continue;
         }
 
@@ -386,7 +410,7 @@ class GovCmsCkanDatasetParser {
       $data_col_num = $col_num + 1;
 
       // Append labelKey value to header.
-      $table['header'][] = $record->{$this->labelKey};
+      $table['header'][] = $this->createHeaderCell('col', $record->{$this->labelKey});
 
       // Make the rows from the keys.
       foreach ($this->keys as $row_num => $key) {
