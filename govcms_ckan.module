@@ -31,14 +31,6 @@ function govcms_ckan_menu() {
     'access arguments' => array('administer govcms ckan'),
     'file' => 'govcms_ckan.admin.inc',
   );
-  // Temporary demo page, will be removed after integration complete.
-  $items['govcms-ckan/demo-page'] = array(
-    'title' => 'govCMS CKAN Demo Page',
-    'page callback' => 'govcms_ckan_demo_page',
-    'access arguments' => array('access content'),
-    'file' => 'govcms_ckan.demo.inc',
-    'type' => MENU_CALLBACK,
-  );
   return $items;
 }
 
@@ -52,27 +44,6 @@ function govcms_ckan_permission() {
       'description' => t('Allows the user to access the govCMS CKAN admin page.'),
     ),
   );
-}
-
-/**
- * Implements hook_form_BASE_FORM_ID_alter().
- */
-function govcms_ckan_form_node_type_form_alter(&$form, $form_state) {
-  if (isset($form['type'])) {
-    $form['ckan_graph'] = array(
-      '#title' => t('CKAN Graph'),
-      '#type' => 'fieldset',
-      '#collapsible' => TRUE,
-      '#group' => 'additional_settings',
-      '#weight' => -100,
-    );
-    $form['ckan_graph']['govcms_ckan_graph_node'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable govCMS CKAN graph functionality.'),
-      '#description' => t('Allows this content type to be displayed as a CKAN Graph.'),
-      '#default_value' => variable_get('govcms_ckan_graph_node_' . $form['#node_type']->type, FALSE),
-    );
-  }
 }
 
 /**

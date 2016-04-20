@@ -259,13 +259,15 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
   // Make a request to obtain the fields.
   $client = govcms_ckan_client();
   $result = $client->get('action/datastore_search', array('id' => $resource_id));
-  $parser = govcms_ckan_dataset_parser($result->data);
 
   // If something went wrong with request we cannot continue.
   if ($result->valid === FALSE || !isset($result->data->fields)) {
     drupal_set_message(t('Unable to retrieve data for this package'), 'error');
     return $form;
   }
+
+  // Get an instance of the parser.
+  $parser = govcms_ckan_dataset_parser($result->data);
 
   // Loop over fields to build some lists for options.
   $options = array();

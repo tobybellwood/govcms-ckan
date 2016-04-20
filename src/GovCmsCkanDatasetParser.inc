@@ -213,7 +213,7 @@ class GovCmsCkanDatasetParser {
    */
   public function getUniqueLabels($key = NULL) {
     $labels = array();
-    if (!empty($this->records) || !empty($key)) {
+    if (!empty($this->records) && is_array($this->records) && !empty($key)) {
       foreach ($this->records as $record) {
         if (isset($record->{$key})) {
           $labels[$record->{$key}] = $record->{$key};
@@ -377,7 +377,7 @@ class GovCmsCkanDatasetParser {
       foreach ($keys as $key) {
         // If label key is disabled ignore the 'none' key and continue.
         if (empty($key)) {
-	        $row[] = NULL;
+          $row[] = NULL;
           continue;
         }
 

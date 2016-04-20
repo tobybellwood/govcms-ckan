@@ -36,6 +36,7 @@
    * - Table headings (th) is used as the label and the following attributes can be used
    * -- data-color: Hex colour, alternative to using palette on the table element.
    * -- data-style: The style for the line (dashed, solid)
+   * -- data-type: Override the chart type for a specific column of data.
    * - Each column forms a data set, Table headings can be strings but table values must be Ints.
    * -- If a tbody row has a th (scope=row), this will be used to form the x axis tick labels.
    * -- To ignore a thead th (eg placeholder for a label col) use the data-placeholder=true attr.
@@ -500,11 +501,6 @@
     if (settings.type == 'bar') {
       options.bar = {width: {ratio: settings.barWidth}}
     }
-
-    //options.data.types = {
-    //  CriticallyEndangered: 'spline'
-    //};
-    console.log(options);
 
     // Create chart.
     c3.generate(options);
