@@ -26,6 +26,7 @@ function govcms_ckan_media_table_view($file, $display, $config) {
 
     // Setup our configuration.
     $keys = array_filter($config['keys']);
+    $column_overrides = array_map('govcms_ckan_string_to_array', $config['column_overrides']);
 
     // Attributes for the table.
     $attributes = array(
@@ -40,7 +41,7 @@ function govcms_ckan_media_table_view($file, $display, $config) {
       ->setGroupKey($config['split'])
       ->setHeaderSource('keys')
       ->setTableAttributes($attributes)
-      ->setColumnAttributes($config['column_overrides'])
+      ->setColumnAttributes($column_overrides)
       ->parse();
   }
 
