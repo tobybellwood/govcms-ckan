@@ -199,7 +199,8 @@ function govcms_ckan_client() {
   module_load_include('inc', 'govcms_ckan', 'src/GovCmsCkanClient');
   $base_url = variable_get('govcms_ckan_endpoint_url', '');
   $api_key = variable_get('govcms_ckan_api_key', '');
-  return new GovCmsCkanClient($base_url, $api_key);
+  $auth_header = variable_get('govcms_ckan_auth_header', 'Authorization');
+  return new GovCmsCkanClient($base_url, $api_key, $auth_header);
 }
 
 /**
