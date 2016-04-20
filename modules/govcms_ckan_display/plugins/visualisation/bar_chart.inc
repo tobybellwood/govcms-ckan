@@ -15,6 +15,7 @@ $plugin = array(
     'palette_override' => NULL,
     'x_label' => NULL,
     'y_label' => NULL,
+    'column_overrides' => array(),
     'axis_settings' => array(
       'x_tick_rotate' => 0,
       'x_tick_count' => NULL,
@@ -47,6 +48,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
 
     // Setup our configuration.
     $keys = array_filter($config['keys']);
+    $column_overrides = govcms_ckan_display_parse_column_overrides($config['column_overrides']);
 
     // Attributes for the table.
     $attributes = array(
@@ -74,14 +76,13 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
     );
 
     // Parse the data.
-    $parser = govcms_ckan_dataset_parser();
+    $parser = govcms_ckan_dataset_parser($response->data);
     $parser
-      ->setResult($response->data)
       ->setKeys($keys)
       ->setLabelKey($config['labels'])
       ->setHeaderSource($config['x_axis_grouping'])
       ->setTableAttributes($attributes)
-      ->parse();
+      ->setColumnAttributes($column_overrides);
 
     // If splitting on the value of a key.
     if ($config['split']) {

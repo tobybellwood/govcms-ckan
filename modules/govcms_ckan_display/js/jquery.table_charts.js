@@ -36,6 +36,7 @@
    * - Table headings (th) is used as the label and the following attributes can be used
    * -- data-color: Hex colour, alternative to using palette on the table element.
    * -- data-style: The style for the line (dashed, solid)
+   * -- data-type: Override the chart type for a specific column of data.
    * - Each column forms a data set, Table headings can be strings but table values must be Ints.
    * -- If a tbody row has a th (scope=row), this will be used to form the x axis tick labels.
    * -- To ignore a thead th (eg placeholder for a label col) use the data-placeholder=true attr.
@@ -86,6 +87,8 @@
       chartDomId: 'table-chart-0',
       // The type of chart.
       type: 'line',
+      // Type override with the key/type.
+      types: {},
       // The tableChartChart class used to create the chart.
       chart: 'c3js',
       // Chart settings.
@@ -184,6 +187,11 @@
       // @see http://c3js.org/samples/simple_regions.html
       if ($cell.data('style') !== undefined && $cell.data('style') === 'dashed') {
         self.settings.styles.push({set: $cell.html(), style: $cell.data('style')});
+      }
+
+      // Allows a column/heading to define its graph type, overriding the default.
+      if ($cell.data('type') !== undefined) {
+        self.settings.types[$cell.html()] = $cell.data('type');
       }
 
       // Create a group of headings (used for stacking).
@@ -456,6 +464,9 @@
 
     // Show labels on data points?
     settings.data.labels = settings.labels;
+
+    // Add any overrides to graph types based on the column.
+    settings.data.types = settings.types;
 
     // Add the data columns.
     $(settings.columns).each(function (i, col) {

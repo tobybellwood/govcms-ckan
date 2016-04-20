@@ -192,3 +192,26 @@ function govcms_ckan_display_attach_charts(&$element, $table_selector = NULL) {
     $element['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');
   }
 }
+
+/**
+ * This helper parses column override strings into data attributes for tds.
+ *
+ * @param array $column_overrides
+ *   An array keyed by the label with the value being a newline/pipe string.
+ *
+ * @return array
+ *   An array keyed by the label with the value being an array of data
+ *   attributes to add to a given table column.
+ */
+function govcms_ckan_display_parse_column_overrides($column_overrides = array()) {
+  $settings = array();
+  $columns = array_map('govcms_ckan_string_to_array', $column_overrides);
+  foreach ($columns as $label => $overrides) {
+    if (!empty($overrides) && is_array($overrides)) {
+      foreach ($overrides as $key => $value) {
+        $settings[$label]['data-' . $key] = $value;
+      }
+    }
+  }
+  return $settings;
+}
