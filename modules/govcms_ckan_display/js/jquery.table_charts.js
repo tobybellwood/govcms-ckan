@@ -94,6 +94,7 @@
       // Chart settings.
       rotated: false,
       palette: [],
+      paletteOverride: {},
       labels: false,
       styles: [],
       grid: null,
@@ -178,27 +179,30 @@
      *   The value for this cell.
      */
     self.parseTableHeading = function ($cell, col) {
-      // Override colour for this data set.
+      // The content of the TH forms the value/key.
+      var value = $cell.html();
+
+      // Override colour for this data column.
       if ($cell.data('color') !== undefined) {
-        self.settings.palette[col] = $cell.data('color');
+        self.settings.paletteOverride[value] = $cell.data('color');
       }
 
       // Currently only style option is dashed and will only work with line.
       // @see http://c3js.org/samples/simple_regions.html
       if ($cell.data('style') !== undefined && $cell.data('style') === 'dashed') {
-        self.settings.styles.push({set: $cell.html(), style: $cell.data('style')});
+        self.settings.styles.push({set: value, style: $cell.data('style')});
       }
 
       // Allows a column/heading to define its graph type, overriding the default.
       if ($cell.data('type') !== undefined) {
-        self.settings.types[$cell.html()] = $cell.data('type');
+        self.settings.types[value] = $cell.data('type');
       }
 
       // Create a group of headings (used for stacking).
-      self.settings.group.push($cell.html());
+      self.settings.group.push(value);
 
       // Return the value for this cell.
-      return $cell.html();
+      return value;
     };
 
     /*
@@ -467,6 +471,7 @@
 
     // Add any overrides to graph types based on the column.
     settings.data.types = settings.types;
+    settings.data.colors = settings.paletteOverride;
 
     // Add the data columns.
     $(settings.columns).each(function (i, col) {
