@@ -151,7 +151,7 @@
       // Available settings are found in the dataAttributes setting. We loop through
       // each of those and if not empty, override the settings.
       $(self.settings.dataAttributes).each(function (i, attr) {
-        val = self.settings.$dom.data(attr);
+        val = self.settings.$dom.data(attr.toLowerCase());
         if (val !== undefined && val !== null && val !== '') {
           self.settings[attr] = val;
         }
