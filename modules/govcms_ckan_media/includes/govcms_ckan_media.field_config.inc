@@ -272,6 +272,8 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
   // Loop over fields to build some lists for options.
   $options = array();
   foreach ($result->data->fields as $field) {
+    // Cleanse the value (stripping new lines).
+    $field->id = $parser->cleanseValue($field->id);
     // Ignore the ID field.
     if ($field->id == '_id') {
       continue;

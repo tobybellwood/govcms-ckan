@@ -142,6 +142,7 @@ class GovCmsCkanDatasetParser {
   public function setResult($result) {
     $this->result = $result;
     $this->records = $result->records;
+    $this->cleanseKeys();
     return $this;
   }
 
@@ -327,6 +328,32 @@ class GovCmsCkanDatasetParser {
       $cell = array_merge($cell, $this->columnAttributes[$value]);
     }
     return $cell;
+  }
+
+  /**
+   * A helper to cleanse a value by removing new lines.
+   *
+   * @param string $value
+   *   The value to cleanse.
+   *
+   * @return string
+   *   The cleansed value.
+   */
+  public function cleanseValue($value = NULL) {
+    return str_replace(array("\r\n", "\n", "\r"), ' ', $value);
+  }
+
+  /**
+   * A helper to cleanse all keys in the record set.
+   */
+  public function cleanseKeys() {
+    foreach ($this->records as $i => $record) {
+      $clean_record = array();
+      foreach ((array) $record as $key => $value) {
+        $clean_record[$this->cleanseValue($key)] = $value;
+      }
+      $this->records[$i] = (object) $clean_record;
+    }
   }
 
   /**
