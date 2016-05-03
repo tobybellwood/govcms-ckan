@@ -204,6 +204,20 @@ class GovCmsCkanDatasetParser {
   }
 
   /**
+   * Normalises attributes so all keys are lowercase.
+   *
+   * @return array
+   *   An array of attributes.
+   */
+  public function normaliseAttributes($attributes) {
+    $attrs = array();
+    foreach ($attributes as $key => $value) {
+      $attrs[strtolower($key)] = $value;
+    }
+    return $attrs;
+  }
+
+  /**
    * Return the unique labels for a given key.
    *
    * @param string $key
@@ -251,7 +265,7 @@ class GovCmsCkanDatasetParser {
 
       // Add any additional attributes and a generic class.
       $this->tableAttributes['class'][] = 'govcms-ckan-table';
-      $tables[$group_key]['attributes'] = $this->tableAttributes;
+      $tables[$group_key]['attributes'] = $this->normaliseAttributes($this->tableAttributes);
     }
 
     // Format for renderable array if required.
@@ -325,7 +339,7 @@ class GovCmsCkanDatasetParser {
     }
     elseif ($scope == 'col' && !empty($this->columnAttributes[$value])) {
       // Add any additional column attributes.
-      $cell = array_merge($cell, $this->columnAttributes[$value]);
+      $cell = array_merge($cell, $this->normaliseAttributes($this->columnAttributes[$value]));
     }
     return $cell;
   }
