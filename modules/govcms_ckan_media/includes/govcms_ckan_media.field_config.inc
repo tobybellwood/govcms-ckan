@@ -430,6 +430,13 @@ function govcms_ckan_media_visualisation_default_key_config_col_override_callbac
 function govcms_ckan_media_visualisation_default_axis_config($form, $form_state, $config = array()) {
   $element = array();
 
+  // Chart title.
+  $element['show_title'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display chart title'),
+    '#default_value' => $config['show_title'],
+  );
+
   // Labels.
   $element['x_label'] = array(
     '#type' => 'textfield',
