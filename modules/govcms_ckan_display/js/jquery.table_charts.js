@@ -23,6 +23,8 @@
    * -- data-defaultView: Should the chart or table be displayed first. Defaults to 'chart'.
    * -- data-palette: A comma separated list of hex colours to be used for the palette.
    * -- data-grid: Grid lines to use: xy, x or y
+   * -- data-showTitle : Should a title be rendered within the chart
+   * -- data-title : The title string
    * -- data-xLabel: The optional label to show on the X axis
    * -- data-yLabel: The optional label to show on the Y axis
    * -- data-xTickRotate: The angle to rotate X axis labels
@@ -98,6 +100,8 @@
       labels: false,
       styles: [],
       grid: null,
+      showTitle: false,
+      title: null,
       xLabel: null,
       yLabel: null,
       xTickRotate: 0,
@@ -119,7 +123,7 @@
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
         'xTickCount', 'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight',
-        'barWidth', 'yRound'],
+        'barWidth', 'yRound', 'showTitle', 'title'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -500,6 +504,11 @@
       case 'y':
         options.grid = {y: {show: true}};
         break;
+    }
+
+    // Add optional title.
+    if (settings.showTitle) {
+      options.title = {text: settings.title};
     }
 
     // Provide a width ratio for bars.
