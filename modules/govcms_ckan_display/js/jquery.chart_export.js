@@ -101,7 +101,11 @@
       self.settings.svg
         .attr('version', 1.1)
         .attr('xmlns', 'http://www.w3.org/2000/svg')
-        .find('g').removeAttr('clip-path')
+        .find('g').removeAttr('clip-path');
+
+      self.settings.svg
+        .attr('version', 1.1)
+        .attr('xmlns', 'http://www.w3.org/2000/svg')
         .find('text').attr('font-family', '\'arial\'');
 
       // Include c3js styles.
