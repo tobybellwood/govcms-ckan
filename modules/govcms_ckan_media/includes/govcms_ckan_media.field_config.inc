@@ -481,18 +481,11 @@ function govcms_ckan_media_visualisation_default_axis_config($form, $form_state,
 
   // Limit label count.
   $element['axis_settings']['x_tick_cull'] = array(
-    '#title' => t('X Label Count'),
+    '#title' => t('Maximum X label count'),
     '#type' => 'textfield',
     '#default_value' => $config['axis_settings']['x_tick_cull'],
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The max number of labels on the Xaxis.'),
-  );
-  $element['axis_settings']['y_tick_cull'] = array(
-    '#title' => t('Y Label Count'),
-    '#type' => 'textfield',
-    '#default_value' => $config['axis_settings']['y_tick_cull'],
-    '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The max number of labels on the Y axis.'),
+    '#description' => t('The number of X labels will be adjusted to <strong>less than this value</strong>.<br /><strong>NOTE: This will only work if the X axis labels are numbers</strong> as maths is used to reduce the label count.<br />Labels will be rounded to nearest whole number.'),
   );
 
   return $element;

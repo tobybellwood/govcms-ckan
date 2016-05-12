@@ -107,8 +107,7 @@
       xTickRotate: 0,
       xTickCount: null,
       yTickCount: null,
-      xTickCull: null,
-      yTickCull: null,
+      xTickCull: false,
       stacked: false,
       exportWidth: '',
       exportHeight: '',
@@ -122,7 +121,7 @@
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
-        'xTickCount', 'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight',
+        'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight',
         'barWidth', 'yRound', 'showTitle', 'title'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
@@ -449,11 +448,12 @@
     }
 
     // Define the tick label culling (max labels).
-    if (settings.xTickCull) {
+    if (settings.xTickCull !== false) {
       axis.x.tick.culling = {max: parseInt(settings.xTickCull)};
-    }
-    if (settings.yTickCull) {
-      axis.y.tick.culling = {max: parseInt(settings.yTickCull)};
+      // Round labels to whole numbers.
+      axis.x.tick.format = function (x) {
+        return Math.round(x);
+      };
     }
 
     // Perform rounding on Y axis values.
@@ -466,8 +466,10 @@
     if (settings.xLabels.length > 1) {
       settings.data.x = 'x';
       settings.data.columns.push(settings.xLabels);
-      // this needed to load string x value
-      axis.x.type = 'category';
+      // Tick culling prevents this being a category axis.
+      if (settings.xTickCull === false) {
+        axis.x.type = 'category';
+      }
     }
 
     // Show labels on data points?
@@ -512,8 +514,8 @@
     }
 
     // Provide a width ratio for bars.
-    if (settings.type == 'bar') {
-      options.bar = {width: {ratio: settings.barWidth}}
+    if (settings.type === 'bar') {
+      options.bar = {width: {ratio: settings.barWidth}};
     }
 
     // Create chart.
