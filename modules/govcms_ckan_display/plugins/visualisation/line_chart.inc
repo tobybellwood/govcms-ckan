@@ -21,7 +21,6 @@ $plugin = array(
       'x_tick_count' => NULL,
       'y_tick_count' => NULL,
       'x_tick_cull' => NULL,
-      'y_tick_cull' => NULL,
     ),
     'ckan_filters' => array(
       'search' => NULL,
@@ -67,7 +66,6 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       'data-xTickCount' => $config['axis_settings']['x_tick_count'],
       'data-yTickCount' => $config['axis_settings']['y_tick_count'],
       'data-xTickCull' => $config['axis_settings']['x_tick_cull'],
-      'data-yTickCull' => $config['axis_settings']['y_tick_cull'],
 
       // Display settings.
       'data-palette' => (!empty($config['palette_override']) ? $config['palette_override'] : $config['palette']),
