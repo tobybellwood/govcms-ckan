@@ -10,13 +10,14 @@ $plugin = array(
     'rotated' => 'false',
     'area' => 0,
     'show_labels' => 0,
+    'hide_points' => 0,
     'grid' => NULL,
     'palette_override' => NULL,
     'show_title' => 1,
     'x_label' => NULL,
     'y_label' => NULL,
     'column_overrides' => array(),
-    'label_options' => array(
+    'label_settings' => array(
       'overrides' => NULL,
     ),
     'axis_settings' => array(
@@ -51,7 +52,7 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
     // Setup our configuration.
     $keys = array_filter($config['keys']);
     $column_overrides = govcms_ckan_display_parse_column_overrides($config['column_overrides']);
-    $label_replacements = govcms_ckan_string_to_array($config['label_options']['overrides']);
+    $label_replacements = govcms_ckan_string_to_array($config['label_settings']['overrides']);
 
     // Attributes for the table.
     $attributes = array(
@@ -61,6 +62,7 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       'data-type' => ($config['area'] == 1 ? 'area' : 'line'),
       'data-rotated' => $config['rotated'],
       'data-labels' => ($config['show_labels'] == 1 ? 'true' : 'false'),
+      'data-hidePoints' => ($config['hide_points'] == 1 ? 'true' : 'false'),
       'data-grid' => $config['grid'],
       'data-showTitle' => ($config['show_title'] == 1 ? 'true' : 'false'),
       'data-title' => $file->filename,
@@ -133,6 +135,12 @@ function govcms_ckan_display_line_chart_configure($plugin, $form, $form_state, $
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
     '#default_value' => $config['show_labels'],
+  );
+
+  $config_form['hide_points'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable data points'),
+    '#default_value' => $config['hide_points'],
   );
 
   $config_form['palette_override'] = array(

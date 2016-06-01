@@ -23,6 +23,8 @@
    * -- data-defaultView: Should the chart or table be displayed first. Defaults to 'chart'.
    * -- data-palette: A comma separated list of hex colours to be used for the palette.
    * -- data-grid: Grid lines to use: xy, x or y
+   * -- data-hidePoints: Default is false, gives the ability to hide points. Only applies to line/spline.
+   * -- data-pointSize: Define the point size, default is 2.5
    * -- data-showTitle : Should a title be rendered within the chart
    * -- data-title : The title string
    * -- data-xLabel: The optional label to show on the X axis
@@ -103,6 +105,7 @@
       showTitle: false,
       title: null,
       hidePoints: false,
+      pointSize: 2.5,
       xLabel: null,
       yLabel: null,
       xTickRotate: 0,
@@ -123,7 +126,7 @@
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
         'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight',
-        'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints'],
+        'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',

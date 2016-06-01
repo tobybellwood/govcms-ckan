@@ -185,7 +185,12 @@
 
       // Optionally hide points from line/spline charts.
       if (self.settings.hidePoints) {
-        point = {show: false};
+        point.show = false;
+      }
+
+      // Optionally set the point size.
+      if (self.settings.pointSize) {
+        point.r = self.settings.pointSize;
       }
 
       self.options.point = point;

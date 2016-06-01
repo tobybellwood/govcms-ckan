@@ -17,7 +17,7 @@ $plugin = array(
     'x_label' => NULL,
     'y_label' => NULL,
     'column_overrides' => array(),
-    'label_options' => array(
+    'label_settings' => array(
       'overrides' => NULL,
     ),
     'axis_settings' => array(
@@ -52,7 +52,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
     // Setup our configuration.
     $keys = array_filter($config['keys']);
     $column_overrides = govcms_ckan_display_parse_column_overrides($config['column_overrides']);
-    $label_replacements = govcms_ckan_string_to_array($config['label_options']['overrides']);
+    $label_replacements = govcms_ckan_string_to_array($config['label_settings']['overrides']);
 
     // Attributes for the table.
     $attributes = array(

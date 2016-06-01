@@ -392,18 +392,18 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
     );
   }
 
-  $form['label_options'] = array(
+  $form['label_settings'] = array(
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#type' => 'fieldset',
     '#title' => t('Label options'),
   );
 
-  $form['label_options']['overrides'] = array(
+  $form['label_settings']['overrides'] = array(
     '#type' => 'textarea',
     '#rows' => 2,
     '#title' => t('Label overrides'),
-    '#default_value' => isset($config['label_options']['overrides']) ? $config['label_options']['overrides'] : NULL,
+    '#default_value' => isset($config['label_settings']['overrides']) ? $config['label_settings']['overrides'] : NULL,
     '#description' => t('Optionally override one or more labels. Add one original_label|new_label per line and separate with a pipe. This will apply to X axis labels and legend labels.'),
   );
 
