@@ -70,6 +70,11 @@ class GovCmsCkanDatasetParser {
   private $columnAttributes = array();
 
   /**
+   * Label replacements.
+   */
+  private $labelReplacements = array();
+
+  /**
    * GovCmsCkanDatasetParser constructor.
    *
    * @param object $result
@@ -204,6 +209,21 @@ class GovCmsCkanDatasetParser {
   }
 
   /**
+   * Adds label replacements.
+   *
+   * @param array $replacements
+   *   An array of replacements keyed by the original label and the value is
+   *   the replacement value.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setLabelReplacements($replacements = array()) {
+    $this->labelReplacements = array_merge($this->labelReplacements, $replacements);
+    return $this;
+  }
+
+  /**
    * Normalises attributes so all keys are lowercase.
    *
    * @return array
@@ -333,7 +353,7 @@ class GovCmsCkanDatasetParser {
    *   col is empty, eg. placeholder it will be marked as empty.
    */
   private function createHeaderCell($scope = 'row', $value = NULL) {
-    $cell = array('data' => $value, 'header' => TRUE, 'scope' => $scope);
+    $cell = array('data' => $this->parseLabel($value), 'header' => TRUE, 'scope' => $scope);
     if (empty($value) && $scope == 'col') {
       $cell['data-placeholder'] = 'true';
     }
@@ -368,6 +388,20 @@ class GovCmsCkanDatasetParser {
       }
       $this->records[$i] = (object) $clean_record;
     }
+  }
+
+  /**
+   * Applies any label replacements to label values.
+   *
+   * @param string $value
+   *   The original label key.
+   *
+   * @return string
+   *   If a replacement value exists return the replacement, else the original
+   *   value.
+   */
+  private function parseLabel($value) {
+    return !empty($this->labelReplacements[$value]) ? $this->labelReplacements[$value] : $value;
   }
 
   /**

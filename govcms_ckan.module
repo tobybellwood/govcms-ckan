@@ -125,8 +125,8 @@ function govcms_ckan_get_plugin($name) {
  */
 function govcms_ckan_get_plugin_config_form($name, $form, $form_state, $config) {
   $plugin = govcms_ckan_get_plugin($name);
-  // Fallback to plugin defaults if no config exists yet.
-  $config = empty($config) && !empty($plugin['settings']) ? $plugin['settings'] : $config;
+  // Merge custom settings with defaults.
+  $config = array_merge($plugin['settings'], $config);
   $config_form = array();
   if (function_exists($plugin['configure'])) {
     $config_form = call_user_func($plugin['configure'], $plugin, $form, $form_state, $config);
@@ -151,8 +151,8 @@ function govcms_ckan_get_plugin_config_form($name, $form, $form_state, $config) 
  */
 function govcms_ckan_get_plugin_view($name, $file, $display, $config) {
   $plugin = govcms_ckan_get_plugin($name);
-  // Fallback to plugin defaults if no config exists yet.
-  $config = empty($config) && !empty($plugin['settings']) ? $plugin['settings'] : $config;
+  // Merge custom settings with defaults.
+  $config = array_merge($plugin['settings'], $config);
   // Merge display settings but file config takes precedence.
   $config = array_merge($display['settings'], $config);
   // Invoke the view callback.
@@ -191,7 +191,7 @@ function govcms_ckan_client_request_records($resource_id = NULL, $search = NULL,
     $query += array('q' => $search);
   }
 
-  if (!empty ($filters)) {
+  if (!empty($filters)) {
     $query += array('filters' => $filters);
   }
 
