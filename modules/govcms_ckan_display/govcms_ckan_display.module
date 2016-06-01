@@ -64,6 +64,12 @@ function govcms_ckan_display_library() {
       ),
       array(
         'type' => 'file',
+        'data' => $module_path . '/js/table_charts.c3js.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
+      ),
+      array(
+        'type' => 'file',
         'data' => $module_path . '/js/govcms_ckan_display.js',
         'group' => JS_LIBRARY,
         'preprocess' => FALSE,
