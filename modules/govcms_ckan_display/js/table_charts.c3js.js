@@ -111,9 +111,9 @@
     self.parseAxisOptions = function () {
       // Define the axis settings.
       var axis = {
-        rotated: settings.rotated,
-        x: {label: settings.xLabel, tick: {}},
-        y: {label: settings.yLabel, tick: {}}
+        rotated: self.settings.rotated,
+        x: {label: {text: self.settings.xLabel}, tick: {}},
+        y: {label: {text: self.settings.yLabel}, tick: {}}
       };
 
       // Define the tick rotation.
@@ -147,6 +147,14 @@
       // Tick culling prevents this being a category axis.
       if (self.settings.xLabels.length > 1 && self.settings.xTickCull === false) {
         axis.x.type = 'category';
+      }
+
+      // Set the label positions.
+      if (self.settings.xAxisLabelPos) {
+        axis.x.label.position = self.settings.xAxisLabelPos;
+      }
+      if (self.settings.yAxisLabelPos) {
+        axis.y.label.position = self.settings.yAxisLabelPos;
       }
 
       // Add to options.

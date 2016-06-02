@@ -252,3 +252,36 @@ function govcms_ckan_string_to_array($string) {
   }
   return $values;
 }
+
+/**
+ * A helper to abstract settings from a config array or object.
+ *
+ * This prevents the need for having issets everywhere when retrieving config
+ * values that potentially do not exist in a config array. Eg newly added keys
+ * that might not be in the database for existing content.
+ *
+ * @param mixed $config
+ *   A config array or object.
+ * @param string $key
+ *   The key to retrieve the settings from, you can use a slash to get nested
+ *   values. Eg 'label/overrides' would retrieve $config['label']['overrides'].
+ * @param mixed $default_value
+ *   A fallback if no setting found.
+ *
+ * @return mixed
+ *   The config value.
+ */
+function govcms_ckan_get_config_value($config, $key, $default_value = NULL) {
+  $config = is_object($config) ? (array) $config : $config;
+  $keys = explode('/', $key);
+  $value = $default_value;
+  foreach ($keys as $depth => $val) {
+    if (($depth + 1) == count($keys) && isset($config[$val])) {
+      $value = $config[$val];
+    }
+    else {
+      $config = isset($config[$val]) ? (array) $config[$val] : array();
+    }
+  }
+  return $value;
+}

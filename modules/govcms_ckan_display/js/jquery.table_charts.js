@@ -112,6 +112,8 @@
       xTickCount: null,
       yTickCount: null,
       xTickCull: false,
+      xAxisLabelPos: 'inner-right',
+      yAxisLabelPos: 'inner-top',
       stacked: false,
       exportWidth: '',
       exportHeight: '',
@@ -126,7 +128,7 @@
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
         'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight',
-        'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize'],
+        'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
