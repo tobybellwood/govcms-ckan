@@ -133,7 +133,9 @@
       // Component prefix used for dom classes and ids.
       component: 'table-chart',
       // Chart Initialized callback
-      chartInitCallback: function () {}
+      chartInitCallback: function () {
+        self.triggerEvent('init:chart');
+      }
     };
 
     // Settings start with defaults and extended by options passed to the constructor.
@@ -294,6 +296,7 @@
     self.buildMarkup = function () {
       // Build our chart dom ID, and dom elements we'll need.
       self.$chart = $('<div>');
+      self.$actions = $('<div>').addClass(self.settings.component + '--actions');
       self.$toggle = $('<button>');
 
       // Give the table a unique class and give it a wrapper.
@@ -308,7 +311,10 @@
       self.$toggle.html(self.toggleButtonText())
         .addClass(self.settings.component + '--toggle')
         .click(self.toggleView)
-        .insertAfter(self.$tableWrapper);
+        .appendTo(self.$actions);
+
+      // Add actions to the dom.
+      self.$actions.insertAfter(self.$tableWrapper);
 
       // Add chart placeholder to dom with a unique Id.
       self.$chart.attr('id', self.settings.chartDomId)
@@ -376,13 +382,25 @@
     };
 
     /*
+     * Trigger an event so other scripts can listen for changes.
+     */
+    self.triggerEvent = function (event) {
+      $(window).trigger({type: 'tableCharts:' + event, el: self});
+
+      // Return self for chaining.
+      return self;
+    };
+
+    /*
      * Initialize the class.
      */
     self.init = function () {
       self
         .parseSettings()
         .parseData()
-        .buildMarkup();
+        .triggerEvent('init:parse')
+        .buildMarkup()
+        .triggerEvent('init:dom');
     };
 
     // Init on construct.
