@@ -23,6 +23,8 @@
    * -- data-defaultView: Should the chart or table be displayed first. Defaults to 'chart'.
    * -- data-palette: A comma separated list of hex colours to be used for the palette.
    * -- data-grid: Grid lines to use: xy, x or y
+   * -- data-hidePoints: Default is false, gives the ability to hide points. Only applies to line/spline.
+   * -- data-pointSize: Define the point size, default is 2.5
    * -- data-showTitle : Should a title be rendered within the chart
    * -- data-title : The title string
    * -- data-xLabel: The optional label to show on the X axis
@@ -62,7 +64,7 @@
   /*
    * Storage for the chart classes available.
    */
-  var tableChartsChart = {};
+  window.tableChartsChart = window.tableChartsChart || {};
 
   /**
    * tableChart class.
@@ -102,12 +104,16 @@
       grid: null,
       showTitle: false,
       title: null,
+      hidePoints: false,
+      pointSize: 2.5,
       xLabel: null,
       yLabel: null,
       xTickRotate: 0,
       xTickCount: null,
       yTickCount: null,
       xTickCull: false,
+      xAxisLabelPos: 'inner-right',
+      yAxisLabelPos: 'inner-top',
       stacked: false,
       exportWidth: '',
       exportHeight: '',
@@ -122,7 +128,7 @@
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
         'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight',
-        'barWidth', 'yRound', 'showTitle', 'title'],
+        'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -408,136 +414,6 @@
 
     // Return self for chaining.
     return self;
-  };
-
-  /**
-   * The tableCharts c3js implementation.
-   *
-   * @param settings
-   *   The parsed settings from tableCharts.
-   *
-   * TODO: If this gets to large, move to its own file.
-   */
-  tableChartsChart.c3js = function (settings) {
-    // Ensure library is loaded.
-    if (typeof c3 === 'undefined') {
-      alert('c3js library not found');
-      return;
-    }
-
-    // Type of chart is stored in the data.
-    settings.data.type = settings.type;
-
-    // Placeholder for the data columns.
-    settings.data.columns = [];
-
-    // Stacked can be applied to most charts, the stack order used is
-    // the column order.
-    if (settings.stacked) {
-      settings.data.groups = [settings.group];
-    }
-
-    // Apply styles (currently only works with lines and dashes)
-    if (settings.styles.length) {
-      settings.data.regions = {};
-      $(settings.styles).each(function (i, d){
-        settings.data.regions[d.set] = [{style: d.style}];
-      });
-    }
-
-    // Define the axis settings.
-    var axis = {
-      rotated: settings.rotated,
-      x: {label: settings.xLabel, tick: {}},
-      y: {label: settings.yLabel, tick: {}}
-    };
-
-    // Define the tick rotation.
-    if (settings.xTickRotate != 0) {
-      axis.x.tick.rotate = parseInt(settings.xTickRotate);
-    }
-
-    // Define the tick counts.
-    if (settings.xTickCount) {
-      axis.x.tick.count = parseInt(settings.xTickCount);
-    }
-    if (settings.yTickCount) {
-      axis.y.tick.count = parseInt(settings.yTickCount);
-    }
-
-    // Define the tick label culling (max labels).
-    if (settings.xTickCull !== false) {
-      axis.x.tick.culling = {max: parseInt(settings.xTickCull)};
-      // Round labels to whole numbers.
-      axis.x.tick.format = function (x) {
-        return Math.round(x);
-      };
-    }
-
-    // Perform rounding on Y axis values.
-    axis.y.tick.format = function (y) {
-      var places = Math.pow(10, parseInt(settings.yRound));
-      return Math.round(y * places) / places;
-    };
-
-    // Add X axis labels.
-    if (settings.xLabels.length > 1) {
-      settings.data.x = 'x';
-      settings.data.columns.push(settings.xLabels);
-      // Tick culling prevents this being a category axis.
-      if (settings.xTickCull === false) {
-        axis.x.type = 'category';
-      }
-    }
-
-    // Show labels on data points?
-    settings.data.labels = settings.labels;
-
-    // Add any overrides to graph types based on the column.
-    settings.data.types = settings.types;
-    settings.data.colors = settings.paletteOverride;
-
-    // Add the data columns.
-    $(settings.columns).each(function (i, col) {
-      settings.data.columns.push(col);
-    });
-
-    // Options structure to be passed to c3
-    var options = {
-      bindto: '#' + settings.chartDomId,
-      data: settings.data,
-      axis: axis,
-      color: {
-        pattern: settings.palette
-      },
-      oninit: settings.chartInitCallback
-    };
-
-    // Add optional grid lines.
-    switch (settings.grid) {
-      case 'xy':
-        options.grid = {x: {show: true}, y: {show: true}};
-        break;
-      case 'x':
-        options.grid = {x: {show: true}};
-        break;
-      case 'y':
-        options.grid = {y: {show: true}};
-        break;
-    }
-
-    // Add optional title.
-    if (settings.showTitle) {
-      options.title = {text: settings.title};
-    }
-
-    // Provide a width ratio for bars.
-    if (settings.type === 'bar') {
-      options.bar = {width: {ratio: settings.barWidth}};
-    }
-
-    // Create chart.
-    c3.generate(options);
   };
 
   /**

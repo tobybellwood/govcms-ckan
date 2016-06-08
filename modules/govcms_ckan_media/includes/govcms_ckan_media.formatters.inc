@@ -61,10 +61,8 @@ function govcms_ckan_media_field_formatter_info() {
         'export_width' => NULL,
         'export_height' => NULL,
         'palette' => NULL,
-        'x_tick_count' => NULL,
-        'y_tick_count' => NULL,
-        'x_tick_cull' => NULL,
-        'y_tick_cull' => NULL,
+        'x_axis_label_position' => 'inner-right',
+        'y_axis_label_position' => 'inner-top',
       ),
     ),
   );
@@ -129,6 +127,34 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     '#type' => 'textfield',
     '#default_value' => $settings['palette'],
     '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
+  );
+
+  $element['x_axis_label_position'] = array(
+    '#title' => t('X axis label position'),
+    '#type' => 'select',
+    '#default_value' => $settings['x_axis_label_position'],
+    '#options' => array(
+      'inner-right' => t('Inner right'),
+      'inner-center' => t('Inner center'),
+      'inner-left' => t('Inner left'),
+      'outer-right' => t('Outer right'),
+      'outer-center' => t('Outer center'),
+      'outer-left' => t('Outer left'),
+    ),
+  );
+
+  $element['y_axis_label_position'] = array(
+    '#title' => t('Y axis label position'),
+    '#type' => 'select',
+    '#default_value' => $settings['y_axis_label_position'],
+    '#options' => array(
+      'inner-top' => t('Inner top'),
+      'inner-middle' => t('Inner middle'),
+      'inner-bottom' => t('Inner bottom'),
+      'outer-top' => t('Outer top'),
+      'outer-middle' => t('Outer middle'),
+      'outer-bottom' => t('Outer bottom'),
+    ),
   );
 
   return $element;

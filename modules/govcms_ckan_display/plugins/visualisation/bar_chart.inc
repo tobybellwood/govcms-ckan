@@ -17,7 +17,7 @@ $plugin = array(
     'x_label' => NULL,
     'y_label' => NULL,
     'column_overrides' => array(),
-    'label_options' => array(
+    'label_settings' => array(
       'overrides' => NULL,
     ),
     'axis_settings' => array(
@@ -39,8 +39,8 @@ $plugin = array(
 function govcms_ckan_display_bar_chart_view($file, $display, $config) {
   $element = array();
   $chart_class = 'ckan-bar-chart';
-  $ckan_search = $config['ckan_filters']['search'];
-  $ckan_filters = $config['ckan_filters']['filters'];
+  $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
+  $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
   $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
 
   // If failure, provide error message.
@@ -51,8 +51,8 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
 
     // Setup our configuration.
     $keys = array_filter($config['keys']);
-    $column_overrides = govcms_ckan_display_parse_column_overrides($config['column_overrides']);
-    $label_replacements = govcms_ckan_string_to_array($config['label_options']['overrides']);
+    $column_overrides = govcms_ckan_display_parse_column_overrides(govcms_ckan_get_config_value($config, 'column_overrides'));
+    $label_replacements = govcms_ckan_string_to_array(govcms_ckan_get_config_value($config, 'label_settings/overrides'));
 
     // Attributes for the table.
     $attributes = array(
@@ -60,24 +60,26 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       'data-type' => 'bar',
 
       // Entity settings.
-      'data-barWidth' => $config['bar_width'],
-      'data-rotated' => $config['rotated'],
-      'data-stacked' => ($config['stacked'] == 1 ? 'true' : 'false'),
-      'data-labels' => ($config['show_labels'] == 1 ? 'true' : 'false'),
-      'data-grid' => $config['grid'],
-      'data-showTitle' => ($config['show_title'] == 1 ? 'true' : 'false'),
+      'data-barWidth' => govcms_ckan_get_config_value($config, 'bar_width'),
+      'data-rotated' => govcms_ckan_get_config_value($config, 'rotated'),
+      'data-stacked' => (govcms_ckan_get_config_value($config, 'stacked') == 1 ? 'true' : 'false'),
+      'data-labels' => (govcms_ckan_get_config_value($config, 'show_labels') == 1 ? 'true' : 'false'),
+      'data-grid' => govcms_ckan_get_config_value($config, 'grid'),
+      'data-showTitle' => (govcms_ckan_get_config_value($config, 'show_title') == 1 ? 'true' : 'false'),
       'data-title' => $file->filename,
-      'data-xLabel' => $config['x_label'],
-      'data-yLabel' => $config['y_label'],
-      'data-xTickRotate' => ($config['axis_settings']['x_tick_rotate'] == 1 ? '90' : '0'),
-      'data-xTickCount' => $config['axis_settings']['x_tick_count'],
-      'data-yTickCount' => $config['axis_settings']['y_tick_count'],
-      'data-xTickCull' => $config['axis_settings']['x_tick_cull'],
+      'data-xLabel' => govcms_ckan_get_config_value($config, 'x_label'),
+      'data-yLabel' => govcms_ckan_get_config_value($config, 'y_label'),
+      'data-xTickRotate' => (govcms_ckan_get_config_value($config, 'axis_settings/x_tick_rotate') == 1 ? '90' : '0'),
+      'data-xTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_count'),
+      'data-yTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_count'),
+      'data-xTickCull' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
 
       // Display settings.
       'data-palette' => (!empty($config['palette_override']) ? $config['palette_override'] : $config['palette']),
-      'data-exportWidth' => $config['export_width'],
-      'data-exportHeight' => $config['export_height'],
+      'data-exportWidth' => govcms_ckan_get_config_value($config, 'export_width'),
+      'data-exportHeight' => govcms_ckan_get_config_value($config, 'export_height'),
+      'data-xAxisLabelPos' => govcms_ckan_get_config_value($config, 'x_axis_label_position'),
+      'data-yAxisLabelPos' => govcms_ckan_get_config_value($config, 'y_axis_label_position'),
     );
 
     // Parse the data.
@@ -119,7 +121,7 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $c
   $config_form['rotated'] = array(
     '#type' => 'select',
     '#title' => t('Orientation'),
-    '#default_value' => $config['rotated'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'rotated'),
     '#options' => array(
       'false' => t('Vertical'),
       'true' => t('Horizontal'),
@@ -129,13 +131,13 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $c
   $config_form['show_labels'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
-    '#default_value' => $config['show_labels'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'show_labels'),
   );
 
   $config_form['bar_width'] = array(
     '#type' => 'select',
     '#title' => t('Bar width'),
-    '#default_value' => $config['bar_width'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'bar_width'),
     '#options' => array(
       '0.5' => t('Standard'),
       '0.3' => t('Thin'),
@@ -146,20 +148,20 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, $form_state, $c
   $config_form['stacked'] = array(
     '#type' => 'checkbox',
     '#title' => t('Is this stacked'),
-    '#default_value' => $config['stacked'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'stacked'),
   );
 
   $config_form['palette_override'] = array(
     '#title' => t('Palette override'),
     '#type' => 'textfield',
-    '#default_value' => $config['palette_override'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'palette_override'),
     '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
   );
 
   $config_form['grid'] = array(
     '#type' => 'select',
     '#title' => t('Enable grid'),
-    '#default_value' => $config['grid'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'grid'),
     '#empty_option' => t('None'),
     '#options' => array(
       'x' => t('X Lines'),

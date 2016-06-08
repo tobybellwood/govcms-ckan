@@ -1,16 +1,15 @@
 <?php
 /**
  * @file
- * Line chart visualisation.
+ * Point chart visualisation.
  */
 
 $plugin = array(
-  'title' => t('Line chart'),
+  'title' => t('Scatter Plot chart'),
   'settings' => array(
     'rotated' => 'false',
-    'area' => 0,
     'show_labels' => 0,
-    'hide_points' => 0,
+    'point_size' => 2.5,
     'grid' => NULL,
     'palette_override' => NULL,
     'show_title' => 1,
@@ -36,9 +35,9 @@ $plugin = array(
 /**
  * Returns a renderable array that represents the block content.
  */
-function govcms_ckan_display_line_chart_view($file, $display, $config) {
+function govcms_ckan_display_scatter_plot_chart_view($file, $display, $config) {
   $element = array();
-  $chart_class = 'ckan-line-chart';
+  $chart_class = 'ckan-scatter-plot-chart';
   $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
   $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
   $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
@@ -59,10 +58,10 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       'class' => array('ckan-chart', $chart_class),
 
       // Entity settings.
-      'data-type' => (govcms_ckan_get_config_value($config, 'area') == 1 ? 'area' : 'line'),
+      'data-type' => 'scatter',
       'data-rotated' => govcms_ckan_get_config_value($config, 'rotated'),
       'data-labels' => (govcms_ckan_get_config_value($config, 'show_labels') == 1 ? 'true' : 'false'),
-      'data-hidePoints' => (govcms_ckan_get_config_value($config, 'hide_points') == 1 ? 'true' : 'false'),
+      'data-pointSize' => govcms_ckan_get_config_value($config, 'point_size'),
       'data-grid' => govcms_ckan_get_config_value($config, 'grid'),
       'data-showTitle' => (govcms_ckan_get_config_value($config, 'show_title') == 1 ? 'true' : 'false'),
       'data-title' => $file->filename,
@@ -110,13 +109,15 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
   return $element;
 }
 
+
 /**
  * Configure form callback.
  */
-function govcms_ckan_display_line_chart_configure($plugin, $form, $form_state, $config) {
+function govcms_ckan_display_scatter_plot_chart_configure($plugin, $form, $form_state, $config) {
   // Get default key elements.
   $config_form = govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config);
 
+  // Point chart specific settings.
   $config_form['rotated'] = array(
     '#type' => 'select',
     '#title' => t('Orientation'),
@@ -127,22 +128,17 @@ function govcms_ckan_display_line_chart_configure($plugin, $form, $form_state, $
     ),
   );
 
-  $config_form['area'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable area'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'area'),
-  );
-
   $config_form['show_labels'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
     '#default_value' => govcms_ckan_get_config_value($config, 'show_labels'),
   );
 
-  $config_form['hide_points'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Disable data points'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'hide_points'),
+  $config_form['point_size'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Point size'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'point_size'),
+    '#description' => t('Default point size is 2.5'),
   );
 
   $config_form['palette_override'] = array(
@@ -164,7 +160,7 @@ function govcms_ckan_display_line_chart_configure($plugin, $form, $form_state, $
     ),
   );
 
-  // Add axis settings.
+  // Axis settings.
   $axis_config_form = govcms_ckan_media_visualisation_default_axis_config($form, $form_state, $config);
   $config_form = array_merge($config_form, $axis_config_form);
 
