@@ -330,7 +330,7 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
     '#default_value' => $config['keys'],
     '#multiple' => TRUE,
     '#required' => TRUE,
-    '#description' => t('What data to display in the visualisation.'),
+    '#description' => t('What data to display in the visualisation. Do not include the key used in "Label key" below'),
   );
 
   $col_override_id = 'col-override-settings';
@@ -355,7 +355,7 @@ function govcms_ckan_media_visualisation_default_key_config($form, $form_state, 
     '#title' => t('Label key'),
     '#options' => $options['all'],
     '#default_value' => $config['labels'],
-    '#description' => t('What key contains the labels.'),
+    '#description' => t('What key contains the labels. Ensure this key is not selected in "Keys" above.'),
     '#ajax' => array(
       'callback' => 'govcms_ckan_media_visualisation_default_key_config_col_override_callback',
       'wrapper' => $col_override_id,
