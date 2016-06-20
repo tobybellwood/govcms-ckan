@@ -32,7 +32,9 @@
     self.options = {
       bindto: '#' + self.settings.chartDomId,
       color: {pattern: self.settings.palette},
-      oninit: self.settings.chartInitCallback,
+      oninit: function () {
+        self.postBuildCallback();
+      },
       data: {},
       axis: {}
     };
@@ -149,6 +151,11 @@
         axis.x.type = 'category';
       }
 
+      // X Axis tick centered.
+      if (self.settings.xTickCentered) {
+        axis.x.tick.centered = self.settings.xTickCentered;
+      }
+
       // Set the label positions.
       if (self.settings.xAxisLabelPos) {
         axis.x.label.position = self.settings.xAxisLabelPos;
@@ -232,6 +239,16 @@
 
       // Return self for chaining.
       return self;
+    };
+
+    /*
+     * Perform post chart creation tasks.
+     */
+    self.postBuildCallback = function () {
+      // Apply an opacity class to the svg. See govcms_ckan_display.css.
+      $('#' + self.settings.chartDomId + ' > svg').attr('class', 'tc-area-opacity-' + self.settings.areaOpacity);
+      // Execute any callbacks passed from tableCharts.
+      self.settings.chartInitCallback();
     };
 
     // Create the chart.

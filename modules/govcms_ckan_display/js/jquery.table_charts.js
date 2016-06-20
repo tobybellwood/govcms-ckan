@@ -34,6 +34,7 @@
    * -- data-yTickCount: The count of ticks on the Y axis
    * -- data-xTickCull: The max count of labels on the X axis
    * -- data-yTickCull: The max count of labels on the Y axis
+   * -- data-xTickCentered: Are the x ticks centered above labels.
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
    * -- data-exportWidth: The width of the exported png. @see chartExport()
    * -- data-exportHeight: The height of the exported png. @see chartExport()
@@ -112,11 +113,14 @@
       xTickCount: null,
       yTickCount: null,
       xTickCull: false,
+      xTickCentered: true,
       xAxisLabelPos: 'inner-right',
       yAxisLabelPos: 'inner-top',
       stacked: false,
       exportWidth: '',
       exportHeight: '',
+      exportStylesheet: null,
+      areaOpacity: 20,
       yRound: 4,
       barWidth: 0.5,
       // The data for the chart.
@@ -127,8 +131,9 @@
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
-        'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight',
-        'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos'],
+        'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight', 'areaOpacity',
+        'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize',
+        'xAxisLabelPos', 'yAxisLabelPos'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -379,7 +384,8 @@
             format: format,
             svg: self.$chart,
             width: self.settings.exportWidth,
-            height: self.settings.exportHeight
+            height: self.settings.exportHeight,
+            exportStylesheet: self.settings.exportStylesheet
           });
       });
 

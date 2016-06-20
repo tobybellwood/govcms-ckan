@@ -75,6 +75,12 @@ function govcms_ckan_display_library() {
         'preprocess' => FALSE,
       ),
     ),
+    'css' => array(
+      'type' => 'file',
+      'data' => $module_path . '/css/govcms_ckan_display.css',
+      'group' => CSS_DEFAULT,
+      'preprocess' => FALSE,
+    ),
   );
 
   // External Libraries (c3js & filesaver).
@@ -150,6 +156,8 @@ function govcms_ckan_display_library() {
  *   NULL then only the libraries will be added.
  */
 function govcms_ckan_display_add_charts($table_selector = NULL) {
+  // Module path.
+  $module_path = drupal_get_path('module', 'govcms_ckan_display');
   // Include c3js library.
   drupal_add_library('govcms_ckan_display', 'c3js');
   // Include filesaver library.
@@ -157,11 +165,13 @@ function govcms_ckan_display_add_charts($table_selector = NULL) {
   // Include custom chart libs.
   drupal_add_library('govcms_ckan_display', 'govcms_ckan_charts');
 
-  // Add the selector to drupal settings.
   if (!is_null($table_selector)) {
     drupal_add_js(array(
       'govcmsCkanDisplay' => array(
+        // Add the selector to drupal settings.
         'tableChartSelectors' => array($table_selector),
+        // Add the path to the stylesheet that gets embedded in an export.
+        'exportStylesheet' => url($module_path . '/css/govcms_ckan_display.css'),
       ),
     ), 'setting');
   }
@@ -180,7 +190,8 @@ function govcms_ckan_display_add_charts($table_selector = NULL) {
  *   NULL then only the libraries will be added.
  */
 function govcms_ckan_display_attach_charts(&$element, $table_selector = NULL) {
-
+  // Module path.
+  $module_path = drupal_get_path('module', 'govcms_ckan_display');
   // Include c3js library.
   $element['#attached']['library'][] = array('govcms_ckan_display', 'c3js');
   // Include filesaver library.
@@ -188,11 +199,13 @@ function govcms_ckan_display_attach_charts(&$element, $table_selector = NULL) {
   // Include custom chart libs.
   $element['#attached']['library'][] = array('govcms_ckan_display', 'govcms_ckan_charts');
 
-  // Add the table selector the charts will attach to.
   if (!is_null($table_selector)) {
     $settings = array(
       'govcmsCkanDisplay' => array(
+        // Add the selector to drupal settings.
         'tableChartSelectors' => array($table_selector),
+        // Add the path to the stylesheet that gets embedded in an export.
+        'exportStylesheet' => url($module_path . '/css/govcms_ckan_display.css'),
       ),
     );
     $element['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');

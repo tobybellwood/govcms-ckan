@@ -16,7 +16,8 @@
    * - svg: (required) This is either a jQuery object or jQuery selector for the chart.
    * - format: (string) The save as format (svg or png). Defaults to svg
    * - filename: (string) The filename to use when saving, Defaults to 'chart'
-   * - includeC3jsStyles: (bool) Should we inject some c3js styles that fix output bugs. Defaults to true
+   * - includeExportStyles: (bool) Should we inject some styles that fix output bugs. Defaults to true
+   * - exportStylesheet: (string) Optional stylesheet to embed in the svg. Requires includeExportStyles = true.
    * - errorMsg: (string) The error message to display if no browser support for downloading.
    */
 
@@ -46,9 +47,11 @@
       // Export as png dimensions. When values are empty, will automatically size.
       width: '',
       height: '',
-      // Include c3js styles (fixes display bugs with c3js charts)
-      includeC3jsStyles: true,
-      c3jsStyles: 'svg{font:10px sans-serif}line,path{fill:none;stroke:#000}.c3-bar{stroke:none!important}',
+      // Embed additional styles in svg (fixes display bugs with c3js charts)
+      includeExportStyles: true,
+      exportStylesheet: null,
+      // If an export stylesheet is provided, these styles get replaced with the stylesheet content.
+      exportStyles: 'svg{font:10px sans-serif}line,path{fill:none;stroke:#000}.c3-bar{stroke:none!important}',
       // Passed Validation requirements.
       valid: true,
       // Error message.
@@ -92,27 +95,31 @@
       self.settings.svg = self.settings.svg.is('svg') ? self.settings.svg : self.settings.svg.find('> svg');
 
       // If no svg, validation failed.
-      if (self.settings.svg.length === 0 || self.settings.svg.hasClass(processedClass)) {
+      if (self.settings.svg.length === 0) {
         self.settings.valid = false;
-        return;
+        return self;
+      }
+
+      // Don't process the svg more than once.
+      if (self.settings.svg.data('processed') === true) {
+        return self;
       }
 
       // Add some XML attributes.
       self.settings.svg
         .attr('version', 1.1)
         .attr('xmlns', 'http://www.w3.org/2000/svg')
-        .find('g').removeAttr('clip-path');
+        .attr('class', 'chart-export ' + self.settings.svg.attr('class'))
+        .data('processed', true);
 
-      self.settings.svg
-        .attr('version', 1.1)
-        .attr('xmlns', 'http://www.w3.org/2000/svg')
-        .find('text').attr('font-family', '\'arial\'');
+      // Remove clip path from groups.
+      self.settings.svg.find('g').removeAttr('clip-path');
+
+      // Add font family to texts.
+      self.settings.svg.find('text').attr('font-family', '\'arial\'');
 
       // Include c3js styles.
-      self.includeC3jsStyle();
-
-      // Prevent duplicate parsing.
-      self.settings.svg.addClass(processedClass);
+      self.includeExportStyles();
 
       // Return self for chaining.
       return self;
@@ -121,20 +128,34 @@
     /*
      * Inject c3js styles if required.
      */
-    self.includeC3jsStyle = function () {
+    self.includeExportStyles = function () {
       // Check if styles need to be added first.
-      if (!self.settings.includeC3jsStyles) {
+      if (!self.settings.includeExportStyles) {
         return;
       }
 
-      // Create a style element.
-      self.$c3styles = $('<style>')
-        .attr('type', 'text/css')
-        .html("<![CDATA[\n" + self.settings.c3jsStyles + "\n]]>")
-        .appendTo($('defs', self.settings.svg));
+      // If an export stylesheet provided, we load its content.
+      if (self.settings.exportStylesheet !== null) {
+        $.get(self.settings.exportStylesheet, function(data) {
+          self.settings.exportStyles = data;
+          self.embedStyles();
+        });
+      } else {
+        // No export stylesheet, use default styles.
+        self.embedStyles();
+      }
 
       // Return self for chaining.
       return self;
+    };
+
+    // Embed current export styles.
+    self.embedStyles = function () {
+      // Create a style element.
+      self.$c3styles = $('<style>')
+        .attr('type', 'text/css')
+        .html("<![CDATA[\n" + self.settings.exportStyles + "\n]]>")
+        .appendTo($('defs', self.settings.svg));
     };
 
     /*
