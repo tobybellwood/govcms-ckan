@@ -63,6 +63,7 @@ function govcms_ckan_media_field_formatter_info() {
         'palette' => NULL,
         'x_axis_label_position' => 'inner-right',
         'y_axis_label_position' => 'inner-top',
+        'x_axis_tick_centered' => 1,
       ),
     ),
   );
@@ -157,6 +158,14 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     ),
   );
 
+  $element['x_axis_tick_centered'] = array(
+    '#title' => t('Center X axis tick above label'),
+    '#description' => t('When enabled the tick will display directly above the label on a the X axis.'),
+    '#type' => 'checkbox',
+    '#default_value' => $settings['x_axis_tick_centered'],
+    '#value' => 1,
+  );
+
   return $element;
 }
 
@@ -166,10 +175,13 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
 function govcms_ckan_media_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $summary = array();
+  // Use the form to populate the labels.
+  $form_state = array();
+  $config_form = govcms_ckan_media_field_formatter_settings_form($field, $instance, $view_mode, array(), $form_state);
   // Dynamically create summary from settings.
   foreach ($display['settings'] as $key => $value) {
     if (!empty($value)) {
-      $summary[] = $key . ': ' . filter_xss($value);
+      $summary[] = $config_form[$key]['#title'] . ': ' . filter_xss($value);
     }
   }
   return !empty($summary) ? implode('<br />', $summary) : t('Default display');

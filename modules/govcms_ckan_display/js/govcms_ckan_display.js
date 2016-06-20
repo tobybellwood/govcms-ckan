@@ -17,8 +17,10 @@
       // Tables to act on.
       var $tables = $(settings.govcmsCkanDisplay.tableChartSelectors.join(','), context);
 
-      // Add tableCharts.
-      $tables.once('table-charts').tableCharts();
+      // Add tableCharts, including export stylesheets.
+      $tables.once('table-charts').tableCharts({
+        exportStylesheet: settings.govcmsCkanDisplay.exportStylesheet
+      });
 
     }
   };

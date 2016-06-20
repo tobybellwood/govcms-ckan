@@ -470,6 +470,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, $form_state,
     '#title' => t('Advanced axis settings'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
+    '#tree' => TRUE,
   );
 
   // Tick settings.

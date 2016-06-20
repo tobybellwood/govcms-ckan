@@ -80,6 +80,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       'data-exportHeight' => govcms_ckan_get_config_value($config, 'export_height'),
       'data-xAxisLabelPos' => govcms_ckan_get_config_value($config, 'x_axis_label_position'),
       'data-yAxisLabelPos' => govcms_ckan_get_config_value($config, 'y_axis_label_position'),
+      'data-xTickCentered' => (govcms_ckan_get_config_value($config, 'x_axis_tick_centered', 1) == 1 ? 'true' : 'false'),
     );
 
     // Parse the data.

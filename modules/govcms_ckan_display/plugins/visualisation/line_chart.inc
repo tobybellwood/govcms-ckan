@@ -17,6 +17,7 @@ $plugin = array(
     'x_label' => NULL,
     'y_label' => NULL,
     'column_overrides' => array(),
+    'area_opacity' => 20,
     'label_settings' => array(
       'overrides' => NULL,
     ),
@@ -72,6 +73,7 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       'data-xTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_count'),
       'data-yTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_count'),
       'data-xTickCull' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
+      'data-areaOpacity' => govcms_ckan_get_config_value($config, 'area_opacity', 20),
 
       // Display settings.
       'data-palette' => (!empty($config['palette_override']) ? $config['palette_override'] : $config['palette']),
@@ -79,6 +81,7 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       'data-exportHeight' => govcms_ckan_get_config_value($config, 'export_height'),
       'data-xAxisLabelPos' => govcms_ckan_get_config_value($config, 'x_axis_label_position'),
       'data-yAxisLabelPos' => govcms_ckan_get_config_value($config, 'y_axis_label_position'),
+      'data-xTickCentered' => (govcms_ckan_get_config_value($config, 'x_axis_tick_centered', 1) == 1 ? 'true' : 'false'),
     );
 
     // Parse the data.
@@ -131,6 +134,22 @@ function govcms_ckan_display_line_chart_configure($plugin, $form, $form_state, $
     '#type' => 'checkbox',
     '#title' => t('Enable area'),
     '#default_value' => govcms_ckan_get_config_value($config, 'area'),
+  );
+
+  $area_opacity_options = array(10, 20, 30, 40, 50, 60, 70, 80, 90, 100);
+  $config_form['area_opacity'] = array(
+    '#type' => 'select',
+    '#title' => t('Area Opacity'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'area_opacity'),
+    '#options' => array_combine($area_opacity_options, $area_opacity_options),
+    '#states' => array(
+      'visible' => array(
+        // This field is deeply nested so resorting to a fairly ugly selector
+        // if selector is not found the in the edge case that the lang or delta
+        // is different field will fallback to being visible anyway.
+        ':input#edit-ckan-visualisation-und-0-config-visualisation-config-area' => array('checked' => TRUE),
+      ),
+    ),
   );
 
   $config_form['show_labels'] = array(
