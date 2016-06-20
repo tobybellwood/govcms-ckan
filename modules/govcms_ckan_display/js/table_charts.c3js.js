@@ -175,18 +175,29 @@
      * Parse grid options.
      */
     self.parseGridOptions = function () {
+      var grid = {x: {lines: []}, y: {lines: []}};
 
+      // Add default grid.
       switch (self.settings.grid) {
         case 'xy':
-          self.options.grid = {x: {show: true}, y: {show: true}};
+          grid = {x: {show: true}, y: {show: true}};
           break;
         case 'x':
-          self.options.grid = {x: {show: true}};
+          grid = {x: {show: true}};
           break;
         case 'y':
-          self.options.grid = {y: {show: true}};
+          grid = {y: {show: true}};
           break;
       }
+
+      // Add additional grid lines.
+      if (self.settings.gridLines) {
+        $.each(self.settings.gridLines, function(i, line) {
+          grid[line.axis].lines.push(line);
+        });
+      }
+
+      self.options.grid = grid;
 
       // Return self for chaining.
       return self;

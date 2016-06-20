@@ -241,7 +241,7 @@ function _govcms_ckan_media_field_widget_visualisation_options() {
  * @return array
  *   Form structure for new elements.
  */
-function govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config = array(), $key_type = 'numeric') {
+function govcms_ckan_media_visualisation_default_key_config($form, &$form_state, $config = array(), $key_type = 'numeric') {
   $form = array();
 
   // We need a resource_id, however this file might not be saved yet, if it is
@@ -442,7 +442,7 @@ function govcms_ckan_media_visualisation_default_key_config_col_override_callbac
  * @return array
  *   Form structure for new elements.
  */
-function govcms_ckan_media_visualisation_default_axis_config($form, $form_state, $config = array()) {
+function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state, $config = array()) {
   $element = array();
 
   // Chart title.
@@ -477,20 +477,20 @@ function govcms_ckan_media_visualisation_default_axis_config($form, $form_state,
   $element['axis_settings']['x_tick_rotate'] = array(
     '#title' => t('X labels vertical'),
     '#type' => 'checkbox',
-    '#default_value' => $config['axis_settings']['x_tick_rotate'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_rotate'),
     '#description' => t('Check to rotate the X axis labels 90 degrees.'),
   );
   $element['axis_settings']['x_tick_count'] = array(
     '#title' => t('X Tick Count'),
     '#type' => 'textfield',
-    '#default_value' => $config['axis_settings']['x_tick_count'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_count'),
     '#element_validate' => array('element_validate_integer'),
     '#description' => t('The number of ticks on the X axis.'),
   );
   $element['axis_settings']['y_tick_count'] = array(
     '#title' => t('Y Tick Count'),
     '#type' => 'textfield',
-    '#default_value' => $config['axis_settings']['y_tick_count'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_count'),
     '#element_validate' => array('element_validate_integer'),
     '#description' => t('The number of ticks on the Y axis.'),
   );
@@ -499,10 +499,125 @@ function govcms_ckan_media_visualisation_default_axis_config($form, $form_state,
   $element['axis_settings']['x_tick_cull'] = array(
     '#title' => t('Maximum X label count'),
     '#type' => 'textfield',
-    '#default_value' => $config['axis_settings']['x_tick_cull'],
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
     '#element_validate' => array('element_validate_integer'),
     '#description' => t('The number of X labels will be adjusted to <strong>less than this value</strong>.<br /><strong>NOTE: This will only work if the X axis labels are numbers</strong> as maths is used to reduce the label count.<br />Labels will be rounded to nearest whole number.'),
   );
 
+  // Additional grind line configuration.
+  $grid_lines_id = 'axis-lines-settings';
+  $grid_line_values = govcms_ckan_get_config_value($config, 'grid_lines/lines', array());
+  if (empty($form_state['grid_line_count'])) {
+    $form_state['grid_line_count'] = count($grid_line_values) > 0 ? count($grid_line_values) : 1;
+  }
+  $element['grid_lines'] = array(
+    '#collapsible' => TRUE,
+    // Open if more than 1 line or we have values.
+    '#collapsed' => ($form_state['grid_line_count'] < 2 && empty($grid_line_values)),
+    '#type' => 'fieldset',
+    '#title' => t('Additional Grid / Trend Lines'),
+    '#description' => t('This allows you to draw additional grid lines on the chart. Eg Trend lines or intersects.'),
+    '#prefix' => '<div id="' . $grid_lines_id . '">',
+    '#suffix' => '</div>',
+    'lines' => array(
+      '#type' => 'container',
+    ),
+  );
+
+  // For each line make a fieldset containing line settings.
+  for ($i = 0; $i < $form_state['grid_line_count']; $i++) {
+    $grid_line_value = govcms_ckan_get_config_value($grid_line_values, $i);
+    $element['grid_lines']['lines'][$i] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Grid line @num', array('@num' => ($i + 1))),
+      '#attributes' => array('class' => array('container-inline')),
+    );
+    $element['grid_lines']['lines'][$i]['axis'] = array(
+      '#title' => 'Axis',
+      '#type' => 'select',
+      '#options' => array('x' => 'X', 'y' => 'Y'),
+      '#default_value' => govcms_ckan_get_config_value($grid_line_value, 'axis', 'y'),
+    );
+    $element['grid_lines']['lines'][$i]['value'] = array(
+      '#title' => 'Value',
+      '#type' => 'textfield',
+      '#default_value' => govcms_ckan_get_config_value($grid_line_value, 'value'),
+      '#size' => 20,
+    );
+    $element['grid_lines']['lines'][$i]['text'] = array(
+      '#title' => 'Label',
+      '#type' => 'textfield',
+      '#default_value' => govcms_ckan_get_config_value($grid_line_value, 'text'),
+      '#size' => 20,
+    );
+    $element['grid_lines']['lines'][$i]['position'] = array(
+      '#title' => 'Label position',
+      '#type' => 'select',
+      '#options' => array(
+        'start' => 'Start',
+        'middle' => 'Middle',
+        'end' => 'End',
+      ),
+      '#default_value' => govcms_ckan_get_config_value($grid_line_value, 'position', 'end'),
+    );
+    $element['grid_lines']['lines'][$i]['class'] = array(
+      '#title' => 'CSS Class',
+      '#type' => 'textfield',
+      '#default_value' => govcms_ckan_get_config_value($grid_line_value, 'class'),
+      '#size' => 20,
+    );
+  }
+
+  // Add a new grid line.
+  $element['grid_lines']['add'] = array(
+    '#type' => 'submit',
+    '#value' => 'Add line',
+    '#submit' => array('govcms_ckan_media_visualisation_default_grid_lines_config_add_one'),
+    '#ajax' => array(
+      'wrapper' => $grid_lines_id,
+      'callback' => 'govcms_ckan_media_visualisation_default_grid_lines_config_ajax_callback',
+    ),
+  );
+
+  // Remove the last grids line.
+  $element['grid_lines']['remove'] = array(
+    '#type' => 'submit',
+    '#value' => 'Remove line',
+    '#submit' => array('govcms_ckan_media_visualisation_default_grid_lines_config_remove_one'),
+    '#ajax' => array(
+      'wrapper' => $grid_lines_id,
+      'callback' => 'govcms_ckan_media_visualisation_default_grid_lines_config_ajax_callback',
+    ),
+  );
+
   return $element;
+}
+
+/**
+ * Ajax callback for adding an axis line.
+ */
+function govcms_ckan_media_visualisation_default_grid_lines_config_ajax_callback($form, &$form_state) {
+  $form_state['rebuild'] = TRUE;
+  $parents = $form_state['triggering_element']['#parents'];
+  array_pop($parents);
+  $el = drupal_array_get_nested_value($form, $parents);
+  return $el;
+}
+
+/**
+ * Submit callback for adding a new line.
+ */
+function govcms_ckan_media_visualisation_default_grid_lines_config_add_one($form, &$form_state) {
+  $form_state['grid_line_count']++;
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit callback for removing a line.
+ */
+function govcms_ckan_media_visualisation_default_grid_lines_config_remove_one($form, &$form_state) {
+  if ($form_state['grid_line_count'] > 1) {
+    $form_state['grid_line_count']--;
+  }
+  $form_state['rebuild'] = TRUE;
 }
