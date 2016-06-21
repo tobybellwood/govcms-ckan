@@ -74,6 +74,7 @@ function govcms_ckan_display_spline_chart_view($file, $display, $config) {
       'data-xTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_count'),
       'data-yTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_count'),
       'data-xTickCull' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
+      'data-areaOpacity' => govcms_ckan_get_config_value($config, 'area_opacity', 20),
       'data-gridLines' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'grid_lines/lines', array())),
 
       // Display settings.
