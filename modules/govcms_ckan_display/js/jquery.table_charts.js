@@ -103,6 +103,7 @@
       labels: false,
       styles: [],
       grid: null,
+      gridLines: null,
       showTitle: false,
       title: null,
       hidePoints: false,
@@ -133,7 +134,7 @@
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
         'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight', 'areaOpacity',
         'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize',
-        'xAxisLabelPos', 'yAxisLabelPos'],
+        'xAxisLabelPos', 'yAxisLabelPos', 'gridLines'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',

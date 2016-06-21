@@ -11,6 +11,14 @@
 define('GOVCMS_CKAN_CONFIG_PATH', 'admin/config/services/govcms-ckan');
 
 /**
+ * Limit of records retrieved via the API. CKAN default is 100.
+ *
+ * TODO: Move this to a configuration (somewhere). For now, we really want all
+ * records as we don't have any way to 'request more' results from the api.
+ */
+define('GOVCMS_CKAN_DATASET_RECORD_LIMIT', 10000);
+
+/**
  * Implements hook_ctools_plugin_directory().
  */
 function govcms_ckan_ctools_plugin_directory($module, $plugin) {
@@ -123,13 +131,14 @@ function govcms_ckan_get_plugin($name) {
  * @return array
  *   A configuration form.
  */
-function govcms_ckan_get_plugin_config_form($name, $form, $form_state, $config) {
+function govcms_ckan_get_plugin_config_form($name, $form, &$form_state, $config) {
   $plugin = govcms_ckan_get_plugin($name);
   // Merge custom settings with defaults.
   $config = array_merge($plugin['settings'], $config);
   $config_form = array();
-  if (function_exists($plugin['configure'])) {
-    $config_form = call_user_func($plugin['configure'], $plugin, $form, $form_state, $config);
+  $function = $plugin['configure'];
+  if (function_exists($function)) {
+    $config_form = $function($plugin, $form, $form_state, $config);
   }
   return $config_form;
 }
@@ -185,7 +194,7 @@ function govcms_ckan_client() {
  */
 function govcms_ckan_client_request_records($resource_id = NULL, $search = NULL, $filters = NULL) {
   $client = govcms_ckan_client();
-  $query = array('id' => $resource_id);
+  $query = array('id' => $resource_id, 'limit' => GOVCMS_CKAN_DATASET_RECORD_LIMIT);
 
   if (!empty($search)) {
     $query += array('q' => $search);
@@ -284,4 +293,24 @@ function govcms_ckan_get_config_value($config, $key, $default_value = NULL) {
     }
   }
   return $value;
+}
+
+/**
+ * A wrapper to jsonencode complex structure into a string suitable for an attr.
+ *
+ * The purpose of this wrapper is in the case that if additional cleansing is
+ * required for the values, we have a single place to update rather than
+ * additional parsing in a visualisation plugin.
+ *
+ * @param mixed $values
+ *   An array or object to be encoded.
+ *
+ * @return null|string
+ *   A json encoded string ready to be added as a data attribute.
+ */
+function govcms_ckan_json_encode_attribute($values = NULL) {
+  if (!empty($values)) {
+    return json_encode($values);
+  }
+  return NULL;
 }

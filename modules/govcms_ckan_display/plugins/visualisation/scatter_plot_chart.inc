@@ -11,6 +11,7 @@ $plugin = array(
     'show_labels' => 0,
     'point_size' => 2.5,
     'grid' => NULL,
+    'grid_lines' => array('lines' => array()),
     'palette_override' => NULL,
     'show_title' => 1,
     'x_label' => NULL,
@@ -71,6 +72,7 @@ function govcms_ckan_display_scatter_plot_chart_view($file, $display, $config) {
       'data-xTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_count'),
       'data-yTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_count'),
       'data-xTickCull' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
+      'data-gridLines' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'grid_lines/lines', array())),
 
       // Display settings.
       'data-palette' => (!empty($config['palette_override']) ? $config['palette_override'] : $config['palette']),
@@ -114,7 +116,7 @@ function govcms_ckan_display_scatter_plot_chart_view($file, $display, $config) {
 /**
  * Configure form callback.
  */
-function govcms_ckan_display_scatter_plot_chart_configure($plugin, $form, $form_state, $config) {
+function govcms_ckan_display_scatter_plot_chart_configure($plugin, $form, &$form_state, $config) {
   // Get default key elements.
   $config_form = govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config);
 
