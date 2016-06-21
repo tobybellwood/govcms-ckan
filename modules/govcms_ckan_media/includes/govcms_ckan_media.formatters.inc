@@ -163,7 +163,6 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     '#description' => t('When enabled the tick will display directly above the label on a the X axis.'),
     '#type' => 'checkbox',
     '#default_value' => $settings['x_axis_tick_centered'],
-    '#value' => 1,
   );
 
   return $element;
