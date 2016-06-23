@@ -226,6 +226,36 @@ function _govcms_ckan_media_field_widget_visualisation_options() {
  ******************************/
 
 /**
+ * A helper for visualisations to easily include required form widgets.
+ *
+ * @param array $form
+ *   Form array.
+ * @param array $form_state
+ *   Form state.
+ * @param array $config
+ *   Current configuration.
+ * @param array $widgets
+ *   An array of widgets to include. Eg
+ *   - govcms_ckan_media_visualisation_default_key_config
+ *   - govcms_ckan_media_visualisation_default_axis_config
+ *   - govcms_ckan_media_visualisation_default_chart_config
+ *   - govcms_ckan_media_visualisation_default_grid_config
+ *   This enables a visualisation to only include widgets it needs.
+ *
+ * @return mixed
+ *   A form array with all widgets included.
+ */
+function govcms_ckan_media_visualisation_include_form_widgets($form, &$form_state, $config, $widgets = array()) {
+  $elements = array();
+  foreach ($widgets as $callback) {
+    if (function_exists($callback)) {
+      $elements += $callback($form, $form_state, $config);
+    }
+  }
+  return $elements;
+}
+
+/**
  * This helper provides the common elements for selecting the keys.
  *
  * This is implemented by the visualisation and merged into the form structure
@@ -283,6 +313,8 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     // All fields.
     $options['all'][$field->id] = $field->id;
   }
+
+  $form['title_data_settings'] = govcms_ckan_media_form_title_element(t('Data settings'));
 
   // Optional filter and query parameters.
   $form['ckan_filters'] = array(
@@ -371,6 +403,9 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#description' => t('Optionally spit into multiple visualisations based on the value of this key.'),
   );
 
+  $column_override_examples = array(
+    'type|line', 'color|#000000', 'legend|hide', 'style|dashed', 'weight|20', 'class|hide-points',
+  );
   $form['column_overrides'] = array(
     '#prefix' => '<div id="' . $col_override_id . '">',
     '#suffix' => '</div>',
@@ -378,7 +413,8 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#collapsed' => TRUE,
     '#type' => 'fieldset',
     '#title' => t('Column overrides'),
-    '#description' => t('Optionally override a style for a specific column, add one key|value per line and separate key value with a pipe.<br />Examples: <b>type|line</b> or <b>color|#000000</b> or <b>style|dashed</b>.'),
+    '#description' => '<p>' . t('Optionally override a style for a specific column, add one key|value per line and separate key value with a pipe.<br />Examples: <strong>!examples</strong>.',
+      array('!examples' => implode('</strong> or <strong>', $column_override_examples))) . '</p>',
   );
 
   // Get the columns in use and make a text area for each to store its settings.
@@ -445,11 +481,16 @@ function govcms_ckan_media_visualisation_default_key_config_col_override_callbac
 function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state, $config = array()) {
   $element = array();
 
-  // Chart title.
-  $element['show_title'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Display chart title'),
-    '#default_value' => $config['show_title'],
+  $element['title_axis_settings'] = govcms_ckan_media_form_title_element(t('Axis settings'));
+
+  $element['rotated'] = array(
+    '#type' => 'select',
+    '#title' => t('Orientation'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'rotated'),
+    '#options' => array(
+      'false' => t('Vertical'),
+      'true' => t('Horizontal'),
+    ),
   );
 
   // Labels.
@@ -504,9 +545,45 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#description' => t('The number of X labels will be adjusted to <strong>less than this value</strong>.<br /><strong>NOTE: This will only work if the X axis labels are numbers</strong> as maths is used to reduce the label count.<br />Labels will be rounded to nearest whole number.'),
   );
 
+  return $element;
+}
+
+/**
+ * This helper provides the common elements for graph display grid settings.
+ *
+ * Eg: labels, tick counts, etc.
+ *
+ * @param array $form
+ *   Form array for the parent form.
+ * @param array $form_state
+ *   Current form state array from the parent form.
+ * @param array $config
+ *   The current configuration values.
+ *
+ * @return array
+ *   Form structure for new elements.
+ */
+function govcms_ckan_media_visualisation_default_grid_config($form, &$form_state, $config = array()) {
+  $element = array();
+
+  $element['title_grid_settings'] = govcms_ckan_media_form_title_element(t('Grid settings'));
+
+  $element['grid'] = array(
+    '#type' => 'select',
+    '#title' => t('Enable grid'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'grid'),
+    '#empty_option' => t('None'),
+    '#options' => array(
+      'x' => t('X Lines'),
+      'y' => t('Y Lines'),
+      'xy' => t('Both X and Y lines'),
+    ),
+  );
+
   // Additional grind line configuration.
   $grid_lines_id = 'axis-lines-settings';
   $grid_line_values = govcms_ckan_get_config_value($config, 'grid_lines/lines', array());
+  $grid_line_values = govcms_ckan_array_valid_rows($grid_line_values, 'value');
   if (empty($form_state['grid_line_count'])) {
     $form_state['grid_line_count'] = count($grid_line_values) > 0 ? count($grid_line_values) : 1;
   }
@@ -620,4 +697,67 @@ function govcms_ckan_media_visualisation_default_grid_lines_config_remove_one($f
     $form_state['grid_line_count']--;
   }
   $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * This helper provides the common elements for generic chart display settings.
+ *
+ * Eg: Titles, legends, palette, etc.
+ *
+ * @param array $form
+ *   Form array for the parent form.
+ * @param array $form_state
+ *   Current form state array from the parent form.
+ * @param array $config
+ *   The current configuration values.
+ *
+ * @return array
+ *   Form structure for new elements.
+ */
+function govcms_ckan_media_visualisation_default_chart_config($form, &$form_state, $config = array()) {
+  $element = array();
+
+  $element['title_chart_settings'] = govcms_ckan_media_form_title_element(t('Chart settings'));
+
+  $element['show_title'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable chart title'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'show_title'),
+  );
+
+  $element['disable_chart_interaction'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable chart interaction'),
+    '#description' => t('Prevents values from showing on chart hover.'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'disable_chart_interaction'),
+  );
+
+  $element['disable_legend_interaction'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable legend interaction'),
+    '#description' => t('This disables click to toggle and hover effects on the legend.'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'disable_legend_interaction'),
+  );
+
+  $element['palette_override'] = array(
+    '#title' => t('Palette override'),
+    '#type' => 'textfield',
+    '#default_value' => govcms_ckan_get_config_value($config, 'palette_override'),
+    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
+  );
+
+  return $element;
+}
+
+/**
+ * A helper to return a form title element (markup).
+ *
+ * @param string $title
+ *   The title to use.
+ *
+ * @return array
+ *   Markup form element.
+ */
+function govcms_ckan_media_form_title_element($title) {
+  return array('#type' => 'markup', '#markup' => '<h3 class="form-item">' . $title . '</h3>');
 }

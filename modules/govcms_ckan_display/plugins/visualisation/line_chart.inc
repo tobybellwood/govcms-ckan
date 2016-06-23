@@ -18,6 +18,8 @@ $plugin = array(
     'x_label' => NULL,
     'y_label' => NULL,
     'column_overrides' => array(),
+    'disable_chart_interaction' => 0,
+    'disable_legend_interaction' => 0,
     'area_opacity' => 20,
     'label_settings' => array(
       'overrides' => NULL,
@@ -55,6 +57,7 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
     $keys = array_filter($config['keys']);
     $column_overrides = govcms_ckan_display_parse_column_overrides(govcms_ckan_get_config_value($config, 'column_overrides'));
     $label_replacements = govcms_ckan_string_to_array(govcms_ckan_get_config_value($config, 'label_settings/overrides'));
+    $grid_lines = govcms_ckan_get_config_value($config, 'grid_lines/lines', array());
 
     // Attributes for the table.
     $attributes = array(
@@ -75,7 +78,9 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       'data-yTickCount' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_count'),
       'data-xTickCull' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
       'data-areaOpacity' => govcms_ckan_get_config_value($config, 'area_opacity', 20),
-      'data-gridLines' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'grid_lines/lines', array())),
+      'data-gridLines' => govcms_ckan_json_encode_attribute(govcms_ckan_array_valid_rows($grid_lines, 'value')),
+      'data-disableChartInteraction' => (govcms_ckan_get_config_value($config, 'disable_chart_interaction') == 1 ? 'true' : 'false'),
+      'data-disableLegendInteraction' => (govcms_ckan_get_config_value($config, 'disable_legend_interaction') == 1 ? 'true' : 'false'),
 
       // Display settings.
       'data-palette' => (!empty($config['palette_override']) ? $config['palette_override'] : $config['palette']),
@@ -91,6 +96,7 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
     $parser
       ->setKeys($keys)
       ->setLabelKey($config['labels'])
+      ->setKeysOrder($column_overrides, 'data-weight')
       ->setHeaderSource($config['x_axis_grouping'])
       ->setLabelReplacements($label_replacements)
       ->setTableAttributes($attributes)
@@ -119,18 +125,19 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
  * Configure form callback.
  */
 function govcms_ckan_display_line_chart_configure($plugin, $form, &$form_state, $config) {
-  // Get default key elements.
-  $config_form = govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config);
 
-  $config_form['rotated'] = array(
-    '#type' => 'select',
-    '#title' => t('Orientation'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'rotated'),
-    '#options' => array(
-      'false' => t('Vertical'),
-      'true' => t('Horizontal'),
-    ),
+  // Include default widgets.
+  $widgets = array(
+    'govcms_ckan_media_visualisation_default_key_config',
+    'govcms_ckan_media_visualisation_default_axis_config',
+    'govcms_ckan_media_visualisation_default_grid_config',
+    'govcms_ckan_media_visualisation_default_chart_config',
   );
+  $config_form = govcms_ckan_media_visualisation_include_form_widgets($form, $form_state, $config, $widgets);
+
+  // Custom settings.
+  $title = govcms_ckan_media_form_title_element(t('@title settings', array('@title' => $plugin['title'])));
+  $config_form['title_custom_settings'] = $title;
 
   $config_form['area'] = array(
     '#type' => 'checkbox',
@@ -165,29 +172,6 @@ function govcms_ckan_display_line_chart_configure($plugin, $form, &$form_state, 
     '#title' => t('Disable data points'),
     '#default_value' => govcms_ckan_get_config_value($config, 'hide_points'),
   );
-
-  $config_form['palette_override'] = array(
-    '#title' => t('Palette override'),
-    '#type' => 'textfield',
-    '#default_value' => govcms_ckan_get_config_value($config, 'palette_override'),
-    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
-  );
-
-  $config_form['grid'] = array(
-    '#type' => 'select',
-    '#title' => t('Enable grid'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'grid'),
-    '#empty_option' => t('None'),
-    '#options' => array(
-      'x' => t('X Lines'),
-      'y' => t('Y Lines'),
-      'xy' => t('Both X and Y lines'),
-    ),
-  );
-
-  // Add axis settings.
-  $axis_config_form = govcms_ckan_media_visualisation_default_axis_config($form, $form_state, $config);
-  $config_form = array_merge($config_form, $axis_config_form);
 
   return $config_form;
 }

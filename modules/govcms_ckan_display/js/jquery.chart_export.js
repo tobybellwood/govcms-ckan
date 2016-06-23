@@ -173,7 +173,9 @@
     self.savePNG = function () {
       // Create a new image and add the svg as a src.
       var image = new Image();
-      image.src = 'data:image/svg+xml;base64,' + btoa(self.svgHtml);
+
+      // Unescape/encodeURIComponent solves issues with non utf-8 strings.
+      image.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(self.svgHtml)));
 
       // On image load, trigger its download with html5 download attr.
       image.onload = function () {

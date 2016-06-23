@@ -314,3 +314,27 @@ function govcms_ckan_json_encode_attribute($values = NULL) {
   }
   return NULL;
 }
+
+/**
+ * A helper to reduce an array to only valid rows based on a not empty key.
+ *
+ * Eg. If every item in an array requires a non empty 'value' key value then
+ * this will reduce the rows to only those valid rows.
+ *
+ * @param array $rows
+ *   The rows from config. Passed by reference.
+ * @param string $not_empty_key
+ *   The key to check its value is not empty.
+ *
+ * @return array
+ *   The valid rows.
+ */
+function govcms_ckan_array_valid_rows($rows, $not_empty_key = 'value') {
+  $array = array();
+  foreach ($rows as $row) {
+    if (!empty($row[$not_empty_key])) {
+      $array[] = $row;
+    }
+  }
+  return $array;
+}

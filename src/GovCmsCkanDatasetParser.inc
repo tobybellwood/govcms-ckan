@@ -102,6 +102,38 @@ class GovCmsCkanDatasetParser {
   }
 
   /**
+   * Re-orders the keys as per provided order array.
+   *
+   * @param array $order
+   *   An array keyed by the key (original) name, the value for each should be
+   *   an array containing a weight key. The lower the weight the higher it
+   *   appears in the list. If no weight found, default order is used.
+   * @param string $weight_key
+   *   The key that contains the weight.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setKeysOrder($order = array(), $weight_key = 'weight') {
+    $items = array();
+    $new_order = array();
+    // Give each key a weight either the original pos or overridden value.
+    $i = 0;
+    foreach ($this->keys as $pos => $key) {
+      $weight = isset($order[$key][$weight_key]) ? $order[$key][$weight_key] : $i;
+      $items[] = array('key' => $key, 'weight' => $weight);
+      $i++;
+    }
+    // Sort and create a new array of keys in the correct order.
+    uasort($items, array($this, 'sortWeight'));
+    foreach ($items as $item) {
+      $new_order[$item['key']] = $item['key'];
+    }
+    $this->keys = $new_order;
+    return $this;
+  }
+
+  /**
    * Define which key in $keys is the property that returns the label string.
    *
    * @param string $label_key
@@ -224,7 +256,7 @@ class GovCmsCkanDatasetParser {
   }
 
   /**
-   * Normalises attributes so all keys are lowercase.
+   * Normalises attributes so all keys are lowercase and removes empty attrs.
    *
    * @return array
    *   An array of attributes.
@@ -232,7 +264,9 @@ class GovCmsCkanDatasetParser {
   public function normaliseAttributes($attributes) {
     $attrs = array();
     foreach ($attributes as $key => $value) {
-      $attrs[strtolower($key)] = $value;
+      if ($value != '') {
+        $attrs[strtolower($key)] = $value;
+      }
     }
     return $attrs;
   }
@@ -402,6 +436,21 @@ class GovCmsCkanDatasetParser {
    */
   private function parseLabel($value) {
     return !empty($this->labelReplacements[$value]) ? $this->labelReplacements[$value] : $value;
+  }
+
+  /**
+   * Callback for uasort by weight.
+   *
+   * Exact copy of drupal_sort_weight() but included here to ensure class has no
+   * dependance on drupal.
+   */
+  private function sortWeight($a, $b) {
+    $a_weight = (is_array($a) && isset($a['weight'])) ? $a['weight'] : 0;
+    $b_weight = (is_array($b) && isset($b['weight'])) ? $b['weight'] : 0;
+    if ($a_weight == $b_weight) {
+      return 0;
+    }
+    return ($a_weight < $b_weight) ? -1 : 1;
   }
 
   /**
