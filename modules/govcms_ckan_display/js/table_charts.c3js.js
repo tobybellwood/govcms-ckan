@@ -100,6 +100,9 @@
         data.columns.push(col);
       });
 
+      // Add optional classes.
+      data.classes = self.settings.dataClasses;
+
       // Add to options.
       self.options.data = data;
 
@@ -243,9 +246,34 @@
      * Parse generic chart options.
      */
     self.parseChartOptions = function () {
+      self.options.legend = {};
+
       // Add optional title.
       if (self.settings.showTitle) {
         self.options.title = {text: self.settings.title};
+      }
+
+      // Disable legend click/hover.
+      if (self.settings.disableLegendInteraction) {
+        self.options.legend.item = {
+          onclick: function () {
+            return false;
+          },
+          onmouseover: function () {
+            this.api.revert();
+            return false;
+          }
+        };
+      }
+
+      // Disable chart interaction.
+      if (self.settings.disableChartInteraction) {
+        self.options.interaction = {enabled: false};
+      }
+
+      // Hide specific dataset legends.
+      if (self.settings.disabledLegends.length > 0) {
+        self.options.legend.hide = self.settings.disabledLegends;
       }
 
       // Return self for chaining.

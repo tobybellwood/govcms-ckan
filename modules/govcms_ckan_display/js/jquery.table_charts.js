@@ -36,6 +36,8 @@
    * -- data-yTickCull: The max count of labels on the Y axis
    * -- data-xTickCentered: Are the x ticks centered above labels.
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
+   * -- data-disableChartInteraction: Disable hover values on the chart. Default false.
+   * -- data-disableLegendInteraction: Prevent hover/click defaults on legend. Default false
    * -- data-exportWidth: The width of the exported png. @see chartExport()
    * -- data-exportHeight: The height of the exported png. @see chartExport()
    * - Table headings (th) is used as the label and the following attributes can be used
@@ -102,6 +104,8 @@
       paletteOverride: {},
       labels: false,
       styles: [],
+      disabledLegends: [],
+      dataClasses: {},
       grid: null,
       gridLines: null,
       showTitle: false,
@@ -121,6 +125,8 @@
       exportWidth: '',
       exportHeight: '',
       exportStylesheet: null,
+      disableChartInteraction: false,
+      disableLegendInteraction: false,
       areaOpacity: 20,
       yRound: 4,
       barWidth: 0.5,
@@ -134,7 +140,7 @@
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
         'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight', 'areaOpacity',
         'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize',
-        'xAxisLabelPos', 'yAxisLabelPos', 'gridLines'],
+        'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction', 'disableLegendInteraction'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -213,6 +219,16 @@
       // Allows a column/heading to define its graph type, overriding the default.
       if ($cell.data('type') !== undefined) {
         self.settings.types[value] = $cell.data('type');
+      }
+
+      // Allows a column/heading to hide legends.
+      if ($cell.data('legend') !== undefined && $cell.data('legend') === 'hide') {
+        self.settings.disabledLegends.push(value);
+      }
+
+      // Allows a column/heading applying classes to a dataset.
+      if ($cell.data('class') !== undefined) {
+        self.settings.dataClasses[value] = $cell.data('class');
       }
 
       // Create a group of headings (used for stacking).
