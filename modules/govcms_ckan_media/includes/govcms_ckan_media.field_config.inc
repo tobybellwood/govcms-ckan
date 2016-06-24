@@ -91,6 +91,16 @@ function govcms_ckan_media_field_load($entity_type, $entities, $field, $instance
 }
 
 /**
+ * Implements hook_preprocess_HOOK().
+ */
+function govcms_ckan_media_preprocess_html(&$variables) {
+  // Add the admin stylesheet if on an admin page.
+  if (path_is_admin(current_path())) {
+    drupal_add_css(drupal_get_path('module', 'govcms_ckan_media') . '/css/govcms_ckan_media.admin.css');
+  }
+}
+
+/**
  * Implements hook_field_widget_form().
  */
 function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
@@ -142,7 +152,10 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
   // The wrapper element for visualisation configuration.
   $widget['visualisation_config'] = array(
     '#type' => 'container',
-    '#attributes' => array('id' => $vis_wrapper_id),
+    '#attributes' => array(
+      'id' => $vis_wrapper_id,
+      'class' => array('govcms-ckan-media--settings-form'),
+    ),
   );
 
   // If config says there is a configuration, load the form from the plugin.
@@ -759,5 +772,5 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
  *   Markup form element.
  */
 function govcms_ckan_media_form_title_element($title) {
-  return array('#type' => 'markup', '#markup' => '<h3 class="form-item">' . $title . '</h3>');
+  return array('#type' => 'markup', '#markup' => '<h3 class="govcms-ckan-media--settings-title">' . $title . '</h3>');
 }
