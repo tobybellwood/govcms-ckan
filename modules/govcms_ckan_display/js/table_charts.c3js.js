@@ -159,12 +159,12 @@
         axis.x.tick.centered = self.settings.xTickCentered;
       }
 
-      // Set the label positions.
-      if (self.settings.xAxisLabelPos) {
-        axis.x.label.position = self.settings.xAxisLabelPos;
+      // Set the label positions. If rotated we need to swap position settings.
+      if (self.settings.xAxisLabelPos || (self.settings.rotated && self.settings.yAxisLabelPos)) {
+        axis.x.label.position = (!self.settings.rotated ? self.settings.xAxisLabelPos : self.settings.yAxisLabelPos);
       }
-      if (self.settings.yAxisLabelPos) {
-        axis.y.label.position = self.settings.yAxisLabelPos;
+      if (self.settings.yAxisLabelPos || (self.settings.rotated && self.settings.xAxisLabelPos)) {
+        axis.y.label.position = (!self.settings.rotated ? self.settings.yAxisLabelPos : self.settings.xAxisLabelPos);
       }
 
       // Add to options.
