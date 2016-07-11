@@ -109,7 +109,7 @@
       grid: null,
       gridLines: null,
       showTitle: false,
-      title: null,
+      title: 'chart',
       hidePoints: false,
       pointSize: 2.5,
       xLabel: null,
@@ -402,7 +402,8 @@
             svg: self.$chart,
             width: self.settings.exportWidth,
             height: self.settings.exportHeight,
-            exportStylesheet: self.settings.exportStylesheet
+            exportStylesheet: self.settings.exportStylesheet,
+            filename: self.settings.title
           });
       });
 

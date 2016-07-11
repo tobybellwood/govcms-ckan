@@ -270,10 +270,11 @@
     };
 
     /*
-     * Return the filename with extension.
+     * Return a clean filename with extension.
      */
     self.getFilename = function () {
-      return self.settings.filename + '.' + self.settings.format;
+      var cleanFilename = self.settings.filename.replace(/[^a-z0-9_\-]/gi, '_').toLowerCase();
+      return cleanFilename + '.' + self.settings.format;
     };
 
     /*
