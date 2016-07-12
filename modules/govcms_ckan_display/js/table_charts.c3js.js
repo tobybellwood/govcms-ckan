@@ -304,6 +304,10 @@
     self.formatNumber = function (number, separator) {
       // Separate decimal places (if any).
       var nParts = number.toString().split('.');
+      // Formatting only applies on a string length gte to numberFormatMinLength
+      if (nParts[0].toString().length < self.settings.numberFormatMinLength) {
+        return number;
+      }
       // Add a separator at 3n the append back the decimals (if any).
       return nParts[0].toString().replace(/./g, function(c, i, a) {
         return i && c !== "." && ((a.length - i) % 3 === 0) ? separator + c : c;

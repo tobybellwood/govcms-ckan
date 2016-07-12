@@ -35,6 +35,7 @@
    * -- data-yTickValues: Override the tick values on the Y axis (comma separated values)
    * -- data-yTickValueFormat: Format Y axis values in a number format.
    * -- data-xTickValueFormat: Format X axis values in a number format.
+   * -- data-numberFormatMinLength: Formatting of tick values only applies on numbers with a length gte to this.
    * -- data-xTickCull: The max count of labels on the X axis
    * -- data-xTickCentered: Are the x ticks centered above labels.
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
@@ -122,6 +123,7 @@
       yTickValues: null,
       yTickValueFormat: null,
       xTickValueFormat: null,
+      numberFormatMinLength: 5,
       xTickCull: false,
       xTickCentered: true,
       xAxisLabelPos: 'inner-right',
@@ -146,7 +148,7 @@
         'xTickCount', 'yTickCount', 'yTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull', 'stacked',
         'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title',
         'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
-        'yTickValueRound', 'disableLegendInteraction'],
+        'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
