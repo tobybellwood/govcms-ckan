@@ -183,13 +183,14 @@
       // Add default grid.
       switch (self.settings.grid) {
         case 'xy':
-          grid = {x: {show: true}, y: {show: true}};
+          grid.x.show = true;
+          grid.y.show = true;
           break;
         case 'x':
-          grid = {x: {show: true}};
+          grid.x.show = true;
           break;
         case 'y':
-          grid = {y: {show: true}};
+          grid.y.show = true;
           break;
       }
 
