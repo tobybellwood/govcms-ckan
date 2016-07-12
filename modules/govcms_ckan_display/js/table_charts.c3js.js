@@ -134,6 +134,11 @@
         axis.y.tick.count = parseInt(self.settings.yTickCount);
       }
 
+      // Override Y axis values if defined.
+      if (self.settings.yTickValues) {
+        axis.y.tick.values = self.settings.yTickValues.replace(' ', '').split(',');
+      }
+
       // Define the tick label culling (max labels).
       if (self.settings.xTickCull !== false) {
         axis.x.tick.culling = {max: parseInt(self.settings.xTickCull)};
@@ -143,10 +148,23 @@
         };
       }
 
-      // Perform rounding on Y axis values.
+      // Format Y axis ticks.
       axis.y.tick.format = function (y) {
-        var places = Math.pow(10, parseInt(self.settings.yRound));
-        return Math.round(y * places) / places;
+        var value = self.maxRound(y);
+        // Apply number formatting to the tick value.
+        if (self.settings.yTickValueFormat) {
+          return self.formatNumber(value, self.settings.yTickValueFormat);
+        }
+        return value;
+      };
+
+      // Format Y axis ticks.
+      axis.x.tick.format = function (x) {
+        // Apply number formatting to the tick value.
+        if (self.settings.xTickValueFormat) {
+          return self.formatNumber(x, self.settings.xTickValueFormat);
+        }
+        return x;
       };
 
       // Tick culling prevents this being a category axis.
@@ -278,6 +296,29 @@
 
       // Return self for chaining.
       return self;
+    };
+
+    /*
+     * Format a number with a separator at the 3n interval.
+     */
+    self.formatNumber = function (number, separator) {
+      // Separate decimal places (if any).
+      var nParts = number.toString().split('.');
+      // Add a separator at 3n the append back the decimals (if any).
+      return nParts[0].toString().replace(/./g, function(c, i, a) {
+        return i && c !== "." && ((a.length - i) % 3 === 0) ? separator + c : c;
+      }) + (nParts[1] !== undefined ? '.' + nParts[1] : '');
+    };
+
+    /*
+     * Apply max rounding to a number based on yRound (default 4) decimal places.
+     * If decimal values are useless (all zeros) they will be removed.
+     *
+     * Eg. '4.000' will output as '4', and '4.123456' will output as '4.1234'.
+     */
+    self.maxRound = function(number) {
+      var places = Math.pow(10, parseInt(self.settings.yRound));
+      return  Math.round(number * places) / places;
     };
 
     /*

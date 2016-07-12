@@ -32,8 +32,10 @@
    * -- data-xTickRotate: The angle to rotate X axis labels
    * -- data-xTickCount: The count of ticks on the X axis
    * -- data-yTickCount: The count of ticks on the Y axis
+   * -- data-yTickValues: Override the tick values on the Y axis (comma separated values)
+   * -- data-yTickValueFormat: Format Y axis values in a number format.
+   * -- data-xTickValueFormat: Format X axis values in a number format.
    * -- data-xTickCull: The max count of labels on the X axis
-   * -- data-yTickCull: The max count of labels on the Y axis
    * -- data-xTickCentered: Are the x ticks centered above labels.
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
    * -- data-disableChartInteraction: Disable hover values on the chart. Default false.
@@ -117,6 +119,9 @@
       xTickRotate: 0,
       xTickCount: null,
       yTickCount: null,
+      yTickValues: null,
+      yTickValueFormat: null,
+      xTickValueFormat: null,
       xTickCull: false,
       xTickCentered: true,
       xAxisLabelPos: 'inner-right',
@@ -138,9 +143,10 @@
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
-        'xTickCount', 'yTickCount', 'xTickCull', 'stacked', 'exportWidth', 'exportHeight', 'areaOpacity',
-        'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title', 'hidePoints', 'pointSize',
-        'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction', 'disableLegendInteraction'],
+        'xTickCount', 'yTickCount', 'yTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull', 'stacked',
+        'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title',
+        'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
+        'yTickValueRound', 'disableLegendInteraction'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',

@@ -11,6 +11,7 @@ $plugin = array(
     'filters' => NULL,
     'column_overrides' => array(),
   ),
+  'settings' => array(),
 );
 
 /**
