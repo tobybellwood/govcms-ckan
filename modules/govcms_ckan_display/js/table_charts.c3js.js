@@ -330,8 +330,13 @@
      * Perform post chart creation tasks.
      */
     self.postBuildCallback = function () {
-      // Apply an opacity class to the svg. See govcms_ckan_display.css.
-      $('#' + self.settings.chartDomId + ' > svg').attr('class', 'tc-area-opacity-' + self.settings.areaOpacity);
+      // Custom classes that get applied to the svg based on setting.
+      var classes = [
+        'tc-area-opacity-' + self.settings.areaOpacity,
+        'tc-tick-visibility-' + self.settings.tickVisibility
+      ];
+      // $.addClass does't work here so classes are added as an attribute.
+      $('#' + self.settings.chartDomId + ' > svg').attr('class', classes.join(' '));
       // Execute any callbacks passed from tableCharts.
       self.settings.chartInitCallback();
     };

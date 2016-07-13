@@ -8,3 +8,6 @@ svg.chart-export{font:10px sans-serif}.chart-export line,.chart-export path{fill
 
 /* Column override helper classes */
 .c3-target-hide-points .c3-circles {display: none;}
+
+/* Tick visibility */
+.tc-tick-visibility-hide-x .c3-axis-x .tick line {opacity: 0} .tc-tick-visibility-hide-y .c3-axis-y .tick line {opacity: 0} .tc-tick-visibility-hide-xy .c3-axis-x .tick line {opacity: 0} .tc-tick-visibility-hide-xy .c3-axis-y .tick line {opacity: 0}

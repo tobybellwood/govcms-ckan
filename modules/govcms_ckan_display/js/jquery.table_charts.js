@@ -38,6 +38,7 @@
    * -- data-numberFormatMinLength: Formatting of tick values only applies on numbers with a length gte to this.
    * -- data-xTickCull: The max count of labels on the X axis
    * -- data-xTickCentered: Are the x ticks centered above labels.
+   * -- data-tickVisibility: Determins tick visibiliy. Options: show, hide-x, hide-y, hide-xy.
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
    * -- data-disableChartInteraction: Disable hover values on the chart. Default false.
    * -- data-disableLegendInteraction: Prevent hover/click defaults on legend. Default false
@@ -128,6 +129,7 @@
       xTickCentered: true,
       xAxisLabelPos: 'inner-right',
       yAxisLabelPos: 'inner-top',
+      tickVisibility: 'show',
       stacked: false,
       exportWidth: '',
       exportHeight: '',
@@ -148,7 +150,7 @@
         'xTickCount', 'yTickCount', 'yTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull', 'stacked',
         'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title',
         'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
-        'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength'],
+        'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength', 'tickVisibility'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
