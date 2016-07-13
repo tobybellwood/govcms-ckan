@@ -171,7 +171,7 @@ function govcms_ckan_display_add_charts($table_selector = NULL) {
         // Add the selector to drupal settings.
         'tableChartSelectors' => array($table_selector),
         // Add the path to the stylesheet that gets embedded in an export.
-        'exportStylesheet' => url($module_path . '/css/govcms_ckan_display.css'),
+	'exportStylesheets' => array(url($module_path . '/css/govcms_ckan_display.css')),
       ),
     ), 'setting');
   }
@@ -205,7 +205,7 @@ function govcms_ckan_display_attach_charts(&$element, $table_selector = NULL) {
         // Add the selector to drupal settings.
         'tableChartSelectors' => array($table_selector),
         // Add the path to the stylesheet that gets embedded in an export.
-        'exportStylesheet' => url($module_path . '/css/govcms_ckan_display.css'),
+	'exportStylesheets' => array(url($module_path . '/css/govcms_ckan_display.css')),
       ),
     );
     $element['#attached']['js'][] = array('data' => $settings, 'type' => 'setting');

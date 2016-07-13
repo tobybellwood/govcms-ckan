@@ -133,7 +133,7 @@
       stacked: false,
       exportWidth: '',
       exportHeight: '',
-      exportStylesheet: null,
+      exportStylesheets: [],
       disableChartInteraction: false,
       disableLegendInteraction: false,
       areaOpacity: 20,
@@ -412,7 +412,7 @@
             svg: self.$chart,
             width: self.settings.exportWidth,
             height: self.settings.exportHeight,
-            exportStylesheet: self.settings.exportStylesheet,
+	    exportStylesheets: self.settings.exportStylesheets,
             filename: self.settings.title
           });
       });
