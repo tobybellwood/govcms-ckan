@@ -11,6 +11,13 @@ $plugin = array(
     'filters' => NULL,
     'column_overrides' => array(),
   ),
+  'settings' => array(
+    'ckan_filters' => array(
+      'search' => NULL,
+      'filters' => NULL,
+    ),
+    'column_overrides' => array(),
+  ),
 );
 
 /**
@@ -19,14 +26,16 @@ $plugin = array(
 function govcms_ckan_media_table_view($file, $display, $config) {
   $element = array();
   $chart_class = 'ckan-table';
-  $response = govcms_ckan_client_request_records($file->resource_id, $config['ckan_filters']['search'], $config['ckan_filters']['filters']);
+  $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
+  $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
+  $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
 
   // If failure, provide error message.
   if ($response->valid !== FALSE) {
 
     // Setup our configuration.
     $keys = array_filter($config['keys']);
-    $column_overrides = array_map('govcms_ckan_string_to_array', $config['column_overrides']);
+    $column_overrides = govcms_ckan_display_parse_column_overrides(govcms_ckan_get_config_value($config, 'column_overrides'));
 
     // Attributes for the table.
     $attributes = array(
