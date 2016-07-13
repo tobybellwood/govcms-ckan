@@ -591,6 +591,19 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#description' => t('The number of X labels will be adjusted to <strong>less than this value</strong>.<br /><strong>NOTE: This will only work if the X axis labels are numbers</strong> as maths is used to reduce the label count.<br />Labels will be rounded to nearest whole number.'),
   );
 
+  // Tick visibility.
+  $element['axis_settings']['tick_visibility'] = array(
+    '#type' => 'select',
+    '#title' => t('Tick visibility'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/tick_visibility', 'show'),
+    '#options' => array(
+      'show' => t('Show all ticks'),
+      'hide-x' => t('Hide X ticks'),
+      'hide-y' => t('Hide Y ticks'),
+      'hide-xy' => t('Hide X and Y ticks'),
+    ),
+  );
+
   return $element;
 }
 
