@@ -19,7 +19,7 @@
 
       // Add tableCharts, including export stylesheets.
       $tables.once('table-charts').tableCharts({
-	exportStylesheets: settings.govcmsCkanDisplay.exportStylesheets
+        exportStylesheets: settings.govcmsCkanDisplay.exportStylesheets
       });
 
     }

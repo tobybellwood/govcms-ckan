@@ -14,6 +14,9 @@
   // All tableCharts chart implementations should be a method of this object.
   window.tableChartsChart = window.tableChartsChart || {};
 
+  // Store all instances of c3js generated charts by id.
+  window.tableChartC3jsCharts = window.tableChartC3jsCharts || {};
+
   tableChartsChart.c3js = function (settings) {
 
     // Ensure library is loaded.
@@ -53,7 +56,7 @@
         .parseChartOptions();
 
       // Create chart.
-      c3.generate(self.options);
+      window.tableChartC3jsCharts[self.settings.chartDomId] = c3.generate(self.options);
     };
 
     /*
@@ -158,14 +161,14 @@
         return value;
       };
 
-      // Format Y axis ticks.
-      axis.x.tick.format = function (x) {
-        // Apply number formatting to the tick value.
-        if (self.settings.xTickValueFormat) {
+      // Format X axis ticks, as this potentially could be categories we need
+      // to check if value formatting has been explicitly set before using format().
+      if (self.settings.xTickValueFormat && self.settings.xTickValueFormat !== '') {
+        axis.x.tick.format = function (x) {
+          //Apply number formatting to the tick value.
           return self.formatNumber(x, self.settings.xTickValueFormat);
-        }
-        return x;
-      };
+        };
+      }
 
       // Tick culling prevents this being a category axis.
       if (self.settings.xLabels.length > 1 && self.settings.xTickCull === false) {
@@ -252,7 +255,6 @@
      */
     self.parseBarOptions = function () {
       if (self.settings.type === 'bar') {
-
         // Provide a width ratio for bars.
         self.options.bar = {width: {ratio: self.settings.barWidth}};
       }
@@ -283,6 +285,11 @@
             return false;
           }
         };
+      }
+
+      // Additional padding.
+      if (self.settings.chartPadding) {
+        self.options.padding = self.settings.chartPadding;
       }
 
       // Disable chart interaction.
@@ -323,7 +330,7 @@
      */
     self.maxRound = function(number) {
       var places = Math.pow(10, parseInt(self.settings.yRound));
-      return  Math.round(number * places) / places;
+      return Math.round(number * places) / places;
     };
 
     /*

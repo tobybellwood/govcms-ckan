@@ -42,6 +42,7 @@
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
    * -- data-disableChartInteraction: Disable hover values on the chart. Default false.
    * -- data-disableLegendInteraction: Prevent hover/click defaults on legend. Default false
+   * -- data-chartPadding: Additional padding on edges of the chart. Expects object with top, right, bottom, left.
    * -- data-exportWidth: The width of the exported png. @see chartExport()
    * -- data-exportHeight: The height of the exported png. @see chartExport()
    * - Table headings (th) is used as the label and the following attributes can be used
@@ -134,6 +135,7 @@
       exportWidth: '',
       exportHeight: '',
       exportStylesheets: [],
+      chartPadding: {},
       disableChartInteraction: false,
       disableLegendInteraction: false,
       areaOpacity: 20,
@@ -150,7 +152,7 @@
         'xTickCount', 'yTickCount', 'yTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull', 'stacked',
         'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title',
         'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
-        'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength', 'tickVisibility'],
+        'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength', 'tickVisibility', 'chartPadding'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -412,7 +414,7 @@
             svg: self.$chart,
             width: self.settings.exportWidth,
             height: self.settings.exportHeight,
-	    exportStylesheets: self.settings.exportStylesheets,
+            exportStylesheets: self.settings.exportStylesheets,
             filename: self.settings.title
           });
       });

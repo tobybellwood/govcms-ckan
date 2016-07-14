@@ -136,24 +136,24 @@
 
       // If export stylesheets are provided, we load their content.
       if (self.settings.exportStylesheets.length > 0) {
-	var deferreds = [], cssUrl, i;
+        var deferreds = [], cssUrl, i;
 
-	// Ensure we don't have any duplicate stylesheets before fetching (a possible result
-	// of drupal_add_js running multiple times).
-	var cssSheets = self.settings.exportStylesheets.filter(function(element, index, array){
-	  return array.indexOf(element) >= index;
-	});
+        // Ensure we don't have any duplicate stylesheets before fetching (a possible result
+        // of drupal_add_js running multiple times).
+        var cssSheets = self.settings.exportStylesheets.filter(function(element, index, array){
+          return array.indexOf(element) >= index;
+        });
 
-	// Fetch each stylesheet and append to exportStyles.
-	for (i in cssSheets) {
-	  cssUrl = cssSheets[i];
-	  deferreds.push(
-	    $.get(cssUrl, self.appendStyles)
-	  );
-	}
+        // Fetch each stylesheet and append to exportStyles.
+        for (i in cssSheets) {
+          cssUrl = cssSheets[i];
+          deferreds.push(
+            $.get(cssUrl, self.appendStyles)
+          );
+        }
 
-	// After all the sheets are fetched, add them.
-	$.when.apply($, deferreds).then(function () {
+        // After all the sheets are fetched, add them.
+        $.when.apply($, deferreds).then(function () {
           self.embedStyles();
         });
 
