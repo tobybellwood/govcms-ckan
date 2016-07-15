@@ -805,6 +805,25 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
     '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
   );
 
+  // Chart padding.
+  $element['chart_padding'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Chart padding'),
+    '#description' => t('Add additional padding to the side(s) of the chart. This can potentially break charts so use with care.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $padding_edges = array('top', 'right', 'bottom', 'left');
+  foreach ($padding_edges as $edge) {
+    $element['chart_padding'][$edge] = array(
+      '#title' => ucwords($edge),
+      '#type' => 'textfield',
+      '#default_value' => govcms_ckan_get_config_value($config, 'chart_padding/' . $edge),
+    );
+  }
+
   return $element;
 }
 

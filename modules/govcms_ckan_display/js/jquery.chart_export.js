@@ -49,7 +49,7 @@
       height: '',
       // Embed additional styles in svg (fixes display bugs with c3js charts)
       includeExportStyles: true,
-      exportStylesheet: null,
+      exportStylesheets: [],
       // If an export stylesheet is provided, these styles get replaced with the stylesheet content.
       exportStyles: 'svg{font:10px sans-serif}line,path{fill:none;stroke:#000}.c3-bar{stroke:none!important}',
       // Passed Validation requirements.
@@ -134,12 +134,29 @@
         return;
       }
 
-      // If an export stylesheet provided, we load its content.
-      if (self.settings.exportStylesheet !== null) {
-        $.get(self.settings.exportStylesheet, function(data) {
-          self.settings.exportStyles = data;
+      // If export stylesheets are provided, we load their content.
+      if (self.settings.exportStylesheets.length > 0) {
+        var deferreds = [], cssUrl, i;
+
+        // Ensure we don't have any duplicate stylesheets before fetching (a possible result
+        // of drupal_add_js running multiple times).
+        var cssSheets = self.settings.exportStylesheets.filter(function(element, index, array){
+          return array.indexOf(element) >= index;
+        });
+
+        // Fetch each stylesheet and append to exportStyles.
+        for (i in cssSheets) {
+          cssUrl = cssSheets[i];
+          deferreds.push(
+            $.get(cssUrl, self.appendStyles)
+          );
+        }
+
+        // After all the sheets are fetched, add them.
+        $.when.apply($, deferreds).then(function () {
           self.embedStyles();
         });
+
       } else {
         // No export stylesheet, use default styles.
         self.embedStyles();
@@ -147,6 +164,13 @@
 
       // Return self for chaining.
       return self;
+    };
+
+    /*
+     * Callback for joining all external styles together.
+     */
+    self.appendStyles = function(css) {
+      self.settings.exportStyles += css;
     };
 
     // Embed current export styles.

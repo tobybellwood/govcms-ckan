@@ -10,7 +10,7 @@
     attach: function (context, settings) {
 
       // Only auto add if we have settings.
-      if (settings.govcmsCkanDisplay === undefined) {
+      if (settings.govcmsCkanDisplay === undefined || !settings.govcmsCkanDisplay.tableChartSelectors) {
         return;
       }
 
@@ -19,7 +19,7 @@
 
       // Add tableCharts, including export stylesheets.
       $tables.once('table-charts').tableCharts({
-        exportStylesheet: settings.govcmsCkanDisplay.exportStylesheet
+        exportStylesheets: settings.govcmsCkanDisplay.exportStylesheets
       });
 
     }
