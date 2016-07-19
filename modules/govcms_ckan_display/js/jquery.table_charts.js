@@ -33,6 +33,7 @@
    * -- data-xTickCount: The count of ticks on the X axis
    * -- data-yTickCount: The count of ticks on the Y axis
    * -- data-yTickValues: Override the tick values on the Y axis (comma separated values)
+   * -- data-xTickValues: Override the tick values on the X axis (comma separated values)
    * -- data-yTickValueFormat: Format Y axis values in a number format.
    * -- data-xTickValueFormat: Format X axis values in a number format.
    * -- data-numberFormatMinLength: Formatting of tick values only applies on numbers with a length gte to this.
@@ -123,6 +124,7 @@
       xTickCount: null,
       yTickCount: null,
       yTickValues: null,
+      xTickValues: null,
       yTickValueFormat: null,
       xTickValueFormat: null,
       numberFormatMinLength: 5,
@@ -149,9 +151,9 @@
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
-        'xTickCount', 'yTickCount', 'yTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull', 'stacked',
-        'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle', 'title',
-        'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
+        'xTickCount', 'yTickCount', 'yTickValues', 'xTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull',
+        'stacked', 'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle',
+        'title', 'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
         'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength', 'tickVisibility', 'chartPadding'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
