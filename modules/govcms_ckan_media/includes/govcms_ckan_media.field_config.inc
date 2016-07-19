@@ -527,6 +527,8 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#tree' => TRUE,
   );
 
+  $element['axis_settings']['x_axis_title'] = govcms_ckan_media_form_title_element(t('X Axis'));
+
   // Tick settings.
   $element['axis_settings']['x_tick_rotate'] = array(
     '#title' => t('X labels vertical'),
@@ -542,6 +544,36 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#element_validate' => array('element_validate_integer'),
     '#description' => t('The number of ticks on the X axis.'),
   );
+
+  // Limit label count.
+  $element['axis_settings']['x_tick_cull'] = array(
+    '#title' => t('Maximum X label count'),
+    '#type' => 'textfield',
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
+    '#element_validate' => array('element_validate_integer'),
+    '#description' => t('The number of X labels will be adjusted to <strong>less than this value</strong>.<br /><strong>NOTE: This will only work if the X axis labels are numbers</strong> as maths is used to reduce the label count.<br />Labels will be rounded to nearest whole number.'),
+  );
+
+  $element['axis_settings']['x_tick_values'] = array(
+    '#type' => 'textfield',
+    '#title' => t('X Tick Values'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_values'),
+    '#description' => t('Override X axis tick values. Separate values with a comma, values should be numeric and within the range of the dataset.'),
+  );
+
+  $element['axis_settings']['x_tick_value_format'] = array(
+    '#type' => 'select',
+    '#title' => t('X Tick Value Number Format'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_value_format'),
+    '#description' => t('How is the Y axis values are formatted. Only works if X values are numeric.'),
+    '#options' => array(
+      '' => t('None'),
+      ' ' => t('Space separated Eg. 10 000'),
+      ',' => t('Comma separated Eg. 10,000'),
+    ),
+  );
+
+  $element['axis_settings']['y_axis_title'] = govcms_ckan_media_form_title_element(t('Y Axis'));
 
   $element['axis_settings']['y_tick_count'] = array(
     '#title' => t('Y Tick Count'),
@@ -570,26 +602,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     ),
   );
 
-  $element['axis_settings']['x_tick_value_format'] = array(
-    '#type' => 'select',
-    '#title' => t('X Tick Value Number Format'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_value_format'),
-    '#description' => t('How is the Y axis values are formatted. Only works if X values are numeric.'),
-    '#options' => array(
-      '' => t('None'),
-      ' ' => t('Space separated Eg. 10 000'),
-      ',' => t('Comma separated Eg. 10,000'),
-    ),
-  );
-
-  // Limit label count.
-  $element['axis_settings']['x_tick_cull'] = array(
-    '#title' => t('Maximum X label count'),
-    '#type' => 'textfield',
-    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
-    '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The number of X labels will be adjusted to <strong>less than this value</strong>.<br /><strong>NOTE: This will only work if the X axis labels are numbers</strong> as maths is used to reduce the label count.<br />Labels will be rounded to nearest whole number.'),
-  );
+  $element['axis_settings']['x_y_axis_title'] = govcms_ckan_media_form_title_element(t('X and Y Axis'));
 
   // Tick visibility.
   $element['axis_settings']['tick_visibility'] = array(

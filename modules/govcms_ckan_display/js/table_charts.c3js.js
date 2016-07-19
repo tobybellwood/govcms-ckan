@@ -142,6 +142,11 @@
         axis.y.tick.values = self.settings.yTickValues.replace(' ', '').split(',');
       }
 
+      // Override Y axis values if defined.
+      if (self.settings.xTickValues) {
+        axis.x.tick.values = self.settings.xTickValues.replace(' ', '').split(',');
+      }
+
       // Define the tick label culling (max labels).
       if (self.settings.xTickCull !== false) {
         axis.x.tick.culling = {max: parseInt(self.settings.xTickCull)};
@@ -171,7 +176,7 @@
       }
 
       // Tick culling prevents this being a category axis.
-      if (self.settings.xLabels.length > 1 && self.settings.xTickCull === false) {
+      if (self.settings.xLabels.length > 1 && self.settings.xTickCull === false && !self.settings.xTickValues) {
         axis.x.type = 'category';
       }
 
