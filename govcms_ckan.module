@@ -11,6 +11,11 @@
 define('GOVCMS_CKAN_CONFIG_PATH', 'admin/config/services/govcms-ckan');
 
 /**
+ * Base path to the help pages.
+ */
+define('GOVCMS_CKAN_HELP_PATH', 'govcms-ckan/help');
+
+/**
  * Limit of records retrieved via the API. CKAN default is 100.
  *
  * TODO: Move this to a configuration (somewhere). For now, we really want all
@@ -31,6 +36,7 @@ function govcms_ckan_ctools_plugin_directory($module, $plugin) {
  * Implements hook_menu().
  */
 function govcms_ckan_menu() {
+
   $items[GOVCMS_CKAN_CONFIG_PATH] = array(
     'title' => 'govCMS CKAN',
     'description' => 'Settings for govCMS CKAN',
@@ -39,7 +45,35 @@ function govcms_ckan_menu() {
     'access arguments' => array('administer govcms ckan'),
     'file' => 'govcms_ckan.admin.inc',
   );
+
+  // Help functionality modeled on drupal.org/project/advanced_help which is
+  // currently not available in govCMS. If this changes in the future help files
+  // should be compatible and we just change the implementation slightly.
+  $items[GOVCMS_CKAN_HELP_PATH . '/%/%'] = array(
+    'title' => 'govCMS CKAN Help',
+    'page callback' => 'govcms_ckan_help_callback',
+    'page arguments' => array(2, 3),
+    'access arguments' => array('view govcms ckan help'),
+    'file' => 'govcms_ckan.help.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function govcms_ckan_theme($existing, $type, $theme, $path) {
+  return array(
+    'govcms_ckan_help_page' => array(
+      'variables' => array(
+        'page_content' => NULL,
+        'css' => $path . '/css/govcms-ckan.help.css',
+      ),
+      'template' => 'theme/templates/govcms-ckan-help-page',
+    ),
+  );
 }
 
 /**
@@ -50,6 +84,10 @@ function govcms_ckan_permission() {
     'administer govcms ckan' => array(
       'title' => t('Administer govCMS CKAN'),
       'description' => t('Allows the user to access the govCMS CKAN admin page.'),
+    ),
+    'view govcms ckan help' => array(
+      'title' => t('View govCMS CKAN help'),
+      'description' => t('Allows the user to view govCMS CKAN help topics.'),
     ),
   );
 }
@@ -337,4 +375,38 @@ function govcms_ckan_array_valid_rows($rows, $not_empty_key = 'value') {
     }
   }
   return $array;
+}
+
+/**
+ * Returns a link that opens a popup to the given help page.
+ *
+ * This mimics the way Views uses Advanced Help, using onclick instead of
+ * external js to reduce load when not in use.
+ *
+ * @param string $module
+ *   The module implementing the help.
+ * @param string $key
+ *   The key for the help file.
+ * @param string $title
+ *   The title to use for the link.
+ *
+ * @return string
+ *   A link ready to be rendered.
+ */
+function govcms_ckan_help_link($module, $key, $title = 'More help') {
+  if (!user_access('view govcms ckan help')) {
+    return NULL;
+  }
+  return l(
+    '<span>' . $title . '</span>',
+    GOVCMS_CKAN_HELP_PATH . '/' . $module . '/' . $key,
+    array(
+      'html' => TRUE,
+      'attributes' => array(
+        'onclick' => "var w=window.open(this.href, 'advanced_help_window', 'width=500,height=500,scrollbars,resizable'); w.focus(); return false;",
+        'title' => $title,
+        'class' => array('govcms-ckan-help-link'),
+      ),
+    )
+  );
 }

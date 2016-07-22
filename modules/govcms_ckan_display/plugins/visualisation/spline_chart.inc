@@ -155,6 +155,7 @@ function govcms_ckan_display_spline_chart_configure($plugin, $form, &$form_state
     '#type' => 'checkbox',
     '#title' => t('Enable area'),
     '#default_value' => govcms_ckan_get_config_value($config, 'area'),
+    '#description' => t('Enabling area fills in the area between the X axis and the line.'),
   );
 
   $area_opacity_options = array(10, 20, 30, 40, 50, 60, 70, 80, 90, 100);
@@ -163,6 +164,7 @@ function govcms_ckan_display_spline_chart_configure($plugin, $form, &$form_state
     '#title' => t('Area Opacity'),
     '#default_value' => govcms_ckan_get_config_value($config, 'area_opacity'),
     '#options' => array_combine($area_opacity_options, $area_opacity_options),
+    '#description' => t('Define the opacity of the area. This does not affect the line.'),
     '#states' => array(
       'visible' => array(
         // This field is deeply nested so resorting to a fairly ugly selector
@@ -176,12 +178,14 @@ function govcms_ckan_display_spline_chart_configure($plugin, $form, &$form_state
   $config_form['show_labels'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
+    '#description' => t('Display the data values above each point'),
     '#default_value' => $config['show_labels'],
   );
 
   $config_form['hide_points'] = array(
     '#type' => 'checkbox',
     '#title' => t('Disable data points'),
+    '#description' => t('Remove the dots from the lines'),
     '#default_value' => govcms_ckan_get_config_value($config, 'hide_points'),
   );
 

@@ -143,6 +143,7 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
     '#default_value' => isset($config['visualisation']) ? $config['visualisation'] : NULL,
     '#required' => ($form_state['build_info']['form_id'] != 'field_ui_field_edit_form'),
     '#options' => _govcms_ckan_media_field_widget_visualisation_options(),
+    '#description' => t('How the data from this CKAN dataset will be presented when rendered on the page.'),
     '#ajax' => array(
       'callback' => 'govcms_ckan_media_field_widget_visualisation_form',
       'wrapper' => $vis_wrapper_id,
@@ -335,6 +336,8 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#title' => t('CKAN data filters'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
+    '#description' => '<p>' . t('Filters can be used to refine/reduce the records returned from the CKAN datasource. !help.',
+      array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'ckan-filters'))) . '</p>',
   );
 
   // Default values for query string.
@@ -375,10 +378,24 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#default_value' => $config['keys'],
     '#multiple' => TRUE,
     '#required' => TRUE,
-    '#description' => t('What data to display in the visualisation. Do not include the key used in "Label key" below'),
+    '#description' => t('What data to include in the visualisation. If X axis grouping is "Group by keys" these values will form the data groups lines/bars/legend, if grouping is "group by label values" these values will be values on the X axis. <strong>Do not include the key used in "Label key" below</strong>. !help.',
+      array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'keys'))),
   );
 
   $col_override_id = 'col-override-settings';
+  $form['labels'] = array(
+    '#type' => 'select',
+    '#title' => t('Label key'),
+    '#options' => $options['all'],
+    '#default_value' => $config['labels'],
+    '#description' => t('What key contains the labels. Ensure this key is not selected in "Keys" above. !help.',
+      array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'label-key'))),
+    '#ajax' => array(
+      'callback' => 'govcms_ckan_media_visualisation_default_key_config_col_override_callback',
+      'wrapper' => $col_override_id,
+    ),
+  );
+
   $x_axis_grouping = isset($config['x_axis_grouping']) ? $config['x_axis_grouping'] : 'keys';
   $form['x_axis_grouping'] = array(
     '#type' => 'select',
@@ -388,19 +405,8 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
       'values' => t('Group by label values'),
     ),
     '#default_value' => $x_axis_grouping,
-    '#description' => t('Will the x axis be keys or values of the label key.'),
-    '#ajax' => array(
-      'callback' => 'govcms_ckan_media_visualisation_default_key_config_col_override_callback',
-      'wrapper' => $col_override_id,
-    ),
-  );
-
-  $form['labels'] = array(
-    '#type' => 'select',
-    '#title' => t('Label key'),
-    '#options' => $options['all'],
-    '#default_value' => $config['labels'],
-    '#description' => t('What key contains the labels. Ensure this key is not selected in "Keys" above.'),
+    '#description' => t('Will the X axis use the <em>keys</em> or the <em>label key value</em> as tick values. Changing this swaps what is displayed on the X axis (or table header if viewed as a table). !help.',
+      array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'x-axis-grouping'))),
     '#ajax' => array(
       'callback' => 'govcms_ckan_media_visualisation_default_key_config_col_override_callback',
       'wrapper' => $col_override_id,
@@ -413,7 +419,8 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#options' => $options['all'],
     '#default_value' => $config['split'],
     '#empty_option' => t('None'),
-    '#description' => t('Optionally spit into multiple visualisations based on the value of this key.'),
+    '#description' => t('Optionally spit into multiple visualisations based on the value of this key. Eg. a column of the data might contain the year, with this you could split the visualisations into one per year. !help.',
+      array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'split'))),
   );
 
   $column_override_examples = array(
@@ -425,9 +432,12 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#type' => 'fieldset',
-    '#title' => t('Column overrides'),
-    '#description' => '<p>' . t('Optionally override a style for a specific column, add one key|value per line and separate key value with a pipe.<br />Examples: <strong>!examples</strong>.',
-      array('!examples' => implode('</strong> or <strong>', $column_override_examples))) . '</p>',
+    '#title' => t('Column/Group overrides'),
+    '#description' => '<p>' . t('Optionally override a style for a specific column, add one key|value per line and separate key value with a pipe. !help.<br />Examples: <strong>!examples</strong>.',
+      array(
+        '!examples' => implode('</strong> or <strong>', $column_override_examples),
+        '!help' => govcms_ckan_help_link('govcms_ckan_media', 'column-overrides'),
+      )) . '</p>',
   );
 
   // Get the columns in use and make a text area for each to store its settings.
@@ -453,7 +463,8 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#rows' => 2,
     '#title' => t('Label overrides'),
     '#default_value' => isset($config['label_settings']['overrides']) ? $config['label_settings']['overrides'] : NULL,
-    '#description' => t('Optionally override one or more labels. Add one original_label|new_label per line and separate with a pipe. This will apply to X axis labels and legend labels.'),
+    '#description' => t('Optionally override one or more labels. Add one original_label|new_label per line and separate with a pipe. This will apply to X axis labels and legend labels. !help.',
+      array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'label-overrides'))),
   );
 
   // This indicates to future parsers that these elements have been included.
@@ -500,6 +511,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#type' => 'select',
     '#title' => t('Orientation'),
     '#default_value' => govcms_ckan_get_config_value($config, 'rotated'),
+    '#description' => t('Default orientation is vertical, changing to horizontal will rotate the graph 90deg clockwise with the Y axis at the bottom and X axis on the left.'),
     '#options' => array(
       'false' => t('Vertical'),
       'true' => t('Horizontal'),
@@ -511,11 +523,13 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#type' => 'textfield',
     '#title' => t('X axis label'),
     '#default_value' => govcms_ckan_get_config_value($config, 'x_label'),
+    '#description' => t('Add a label to the Y axis to describe what the data values relate to. Eg Height (m) or Weight (kg).'),
   );
   $element['y_label'] = array(
     '#type' => 'textfield',
     '#title' => t('Y axis label'),
     '#default_value' => govcms_ckan_get_config_value($config, 'y_label'),
+    '#description' => t('Add a label to the X axis to describe what the values realte to. Eg Year or Category.'),
   );
 
   // Advanced settings.
@@ -534,7 +548,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#title' => t('X labels vertical'),
     '#type' => 'checkbox',
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_rotate'),
-    '#description' => t('Check to rotate the X axis labels 90 degrees.'),
+    '#description' => t('Check to rotate the X axis labels 90 degrees. This is useful when there is not enough space for the labels to display horizontally.'),
   );
 
   $element['axis_settings']['x_tick_count'] = array(
@@ -542,30 +556,30 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#type' => 'textfield',
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_count'),
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The number of ticks on the X axis.'),
+    '#description' => t('Limit the number of ticks on the X axis. This only relates to the number of ticks on the X axis and not the values.'),
   );
 
   // Limit label count.
   $element['axis_settings']['x_tick_cull'] = array(
-    '#title' => t('Maximum X label count'),
+    '#title' => t('X Label count (max)'),
     '#type' => 'textfield',
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The number of X labels will be adjusted to <strong>less than this value</strong>.<br /><strong>NOTE: This will only work if the X axis labels are numbers</strong> as maths is used to reduce the label count.<br />Labels will be rounded to nearest whole number.'),
+    '#description' => t('The number of X ticks and labels will be adjusted to <strong>less than this value</strong>. Labels will be rounded to nearest whole number.<br /><strong>NOTE: This will only work if the X axis labels are numbers</strong> as maths is used to reduce the label count.'),
   );
 
   $element['axis_settings']['x_tick_values'] = array(
     '#type' => 'textfield',
     '#title' => t('X Tick Values'),
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_values'),
-    '#description' => t('Override X axis tick values. Separate values with a comma, values should be numeric and within the range of the dataset.'),
+    '#description' => t('Override X axis tick values. Separate values with a comma, <strong>only numeric values supported</strong> and they should be within the range of the dataset.<br><strong>NOTE: If defining values here do not use X tick count or X label count.</strong>'),
   );
 
   $element['axis_settings']['x_tick_value_format'] = array(
     '#type' => 'select',
     '#title' => t('X Tick Value Number Format'),
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_value_format'),
-    '#description' => t('How is the Y axis values are formatted. Only works if X values are numeric.'),
+    '#description' => t('How are the Y axis values are formatted. Only works if X values are numeric.'),
     '#options' => array(
       '' => t('None'),
       ' ' => t('Space separated Eg. 10 000'),
@@ -580,7 +594,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#type' => 'textfield',
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_count'),
     '#element_validate' => array('element_validate_integer'),
-    '#description' => t('The number of ticks on the Y axis.'),
+    '#description' => t('Limit the number of ticks on the Y axis.'),
   );
 
   $element['axis_settings']['y_tick_values'] = array(
@@ -594,7 +608,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#type' => 'select',
     '#title' => t('Y Tick Value Number Format'),
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_value_format'),
-    '#description' => t('How is the Y axis values are formatted.'),
+    '#description' => t('How are the Y axis values are formatted.'),
     '#options' => array(
       '' => t('None'),
       ' ' => t('Space separated Eg. 10 000'),
@@ -609,6 +623,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     '#type' => 'select',
     '#title' => t('Tick visibility'),
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/tick_visibility', 'show'),
+    '#description' => t('Applies to the axis ticks only and not the tick labels.'),
     '#options' => array(
       'show' => t('Show all ticks'),
       'hide-x' => t('Hide X ticks'),
@@ -645,6 +660,7 @@ function govcms_ckan_media_visualisation_default_grid_config($form, &$form_state
     '#title' => t('Enable grid'),
     '#default_value' => govcms_ckan_get_config_value($config, 'grid'),
     '#empty_option' => t('None'),
+    '#description' => t('Optionally add grid lines to a chart.'),
     '#options' => array(
       'x' => t('X Lines'),
       'y' => t('Y Lines'),
@@ -665,7 +681,8 @@ function govcms_ckan_media_visualisation_default_grid_config($form, &$form_state
     '#collapsed' => ($form_state['grid_line_count'] < 2 && empty($grid_line_values)),
     '#type' => 'fieldset',
     '#title' => t('Additional Grid / Trend Lines'),
-    '#description' => t('This allows you to draw additional grid lines on the chart. Eg Trend lines or intersects.'),
+    '#description' => '<p>' . t('This allows you to draw additional grid lines on the chart. Eg Trend lines or intersects. !help.',
+        array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'grid-lines'))) . '</p>',
     '#prefix' => '<div id="' . $grid_lines_id . '">',
     '#suffix' => '</div>',
     'lines' => array(
@@ -794,6 +811,7 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
   $element['show_title'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable chart title'),
+    '#description' => t('Render the title as part of the chart, this ensures it is present when exported.  The title used will be the file name above.'),
     '#default_value' => govcms_ckan_get_config_value($config, 'show_title'),
   );
 
@@ -807,7 +825,7 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
   $element['disable_legend_interaction'] = array(
     '#type' => 'checkbox',
     '#title' => t('Disable legend interaction'),
-    '#description' => t('This disables click to toggle and hover effects on the legend.'),
+    '#description' => t('This disables click to toggle and hover effects on the legend. Default legend hover will focus on that column/group, default click toggles visibility of that column/group.'),
     '#default_value' => govcms_ckan_get_config_value($config, 'disable_legend_interaction'),
   );
 
@@ -815,14 +833,14 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
     '#title' => t('Palette override'),
     '#type' => 'textfield',
     '#default_value' => govcms_ckan_get_config_value($config, 'palette_override'),
-    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
+    '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied. If more columns exist than are defined in the palette it will loop back though the palette resulting in duplicate colours used.'),
   );
 
   // Chart padding.
   $element['chart_padding'] = array(
     '#type' => 'fieldset',
     '#title' => t('Chart padding'),
-    '#description' => t('Add additional padding to the side(s) of the chart. This can potentially break charts so use with care.'),
+    '#description' => '<p>' . t('Add additional padding to the outer edges of the chart. This can potentially break charts so use with care.') . '</p>',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#tree' => TRUE,
