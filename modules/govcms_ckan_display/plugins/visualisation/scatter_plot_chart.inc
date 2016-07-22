@@ -152,6 +152,7 @@ function govcms_ckan_display_scatter_plot_chart_configure($plugin, $form, &$form
   $config_form['show_labels'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
+    '#description' => t('Display the data values above each point'),
     '#default_value' => govcms_ckan_get_config_value($config, 'show_labels'),
   );
 

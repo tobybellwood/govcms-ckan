@@ -153,23 +153,28 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, &$form_state, $
   $config_form['show_labels'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable data labels'),
+    '#description' => t('Show the data values above the bars.'),
     '#default_value' => govcms_ckan_get_config_value($config, 'show_labels'),
   );
 
   $config_form['bar_width'] = array(
     '#type' => 'select',
     '#title' => t('Bar width'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'bar_width'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'bar_width', '0.5'),
+    '#description' => t('Override the default width of the bars.'),
     '#options' => array(
-      '0.5' => t('Standard'),
+      '0.2' => t('Extra thin'),
       '0.3' => t('Thin'),
+      '0.5' => t('Standard'),
       '0.75' => t('Thick'),
+      '0.9' => t('Extra thick'),
     ),
   );
 
   $config_form['stacked'] = array(
     '#type' => 'checkbox',
     '#title' => t('Is this stacked'),
+    '#description' => t('Stacking a bar chart will display the bars on top of each other rather than side by side.'),
     '#default_value' => govcms_ckan_get_config_value($config, 'stacked'),
   );
 
