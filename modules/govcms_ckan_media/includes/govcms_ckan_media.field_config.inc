@@ -382,6 +382,7 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
       array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'keys'))),
   );
 
+  $col_override_id = 'col-override-settings';
   $form['labels'] = array(
     '#type' => 'select',
     '#title' => t('Label key'),
@@ -395,7 +396,6 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     ),
   );
 
-  $col_override_id = 'col-override-settings';
   $x_axis_grouping = isset($config['x_axis_grouping']) ? $config['x_axis_grouping'] : 'keys';
   $form['x_axis_grouping'] = array(
     '#type' => 'select',
