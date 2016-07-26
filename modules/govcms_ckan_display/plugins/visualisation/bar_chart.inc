@@ -71,6 +71,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
 
       // Entity settings.
       'data-barWidth' => govcms_ckan_get_config_value($config, 'bar_width'),
+      'data-barWidthOverride' => govcms_ckan_get_config_value($config, 'bar_width_override', 'auto'),
       'data-rotated' => govcms_ckan_get_config_value($config, 'rotated'),
       'data-stacked' => (govcms_ckan_get_config_value($config, 'stacked') == 1 ? 'true' : 'false'),
       'data-labels' => (govcms_ckan_get_config_value($config, 'show_labels') == 1 ? 'true' : 'false'),
@@ -159,15 +160,28 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, &$form_state, $
 
   $config_form['bar_width'] = array(
     '#type' => 'select',
-    '#title' => t('Bar width'),
+    '#title' => t('Bar Ratio'),
     '#default_value' => govcms_ckan_get_config_value($config, 'bar_width', '0.5'),
-    '#description' => t('Override the default width of the bars.'),
+    '#description' => t('Override the default width ratio of the bars.'),
     '#options' => array(
       '0.2' => t('Extra thin'),
       '0.3' => t('Thin'),
       '0.5' => t('Standard'),
       '0.75' => t('Thick'),
       '0.9' => t('Extra thick'),
+      'manual' => t('Manually define width'),
+    ),
+  );
+
+  $config_form['bar_width_override'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Bar width'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'bar_width_override', 6),
+    '#description' => t('Manually set the width of the bars in the chart. Useful if setting X axis values and bar width is incorrect. Numeric whole numbers only or "auto" to use default.'),
+    '#states' => array(
+      'visible' => array(
+        'select#edit-ckan-visualisation-und-0-config-visualisation-config-bar-width' => array('value' => 'manual'),
+      ),
     ),
   );
 

@@ -260,8 +260,13 @@
      */
     self.parseBarOptions = function () {
       if (self.settings.type === 'bar') {
-        // Provide a width ratio for bars.
-        self.options.bar = {width: {ratio: self.settings.barWidth}};
+        if (self.settings.barWidth === 'manual') {
+          // Define the width of the bar manually (not using a ratio).
+          self.options.bar = {width: self.settings.barWidthOverride};
+        } else {
+          // Provide a width ratio for bars.
+          self.options.bar = {width: {ratio: self.settings.barWidth}};
+        }
       }
 
       // Return self for chaining.

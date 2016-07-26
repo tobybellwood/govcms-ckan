@@ -39,10 +39,12 @@
    * -- data-numberFormatMinLength: Formatting of tick values only applies on numbers with a length gte to this.
    * -- data-xTickCull: The max count of labels on the X axis
    * -- data-xTickCentered: Are the x ticks centered above labels.
-   * -- data-tickVisibility: Determins tick visibiliy. Options: show, hide-x, hide-y, hide-xy.
+   * -- data-tickVisibility: Determines tick visibility. Options: show, hide-x, hide-y, hide-xy.
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
    * -- data-disableChartInteraction: Disable hover values on the chart. Default false.
    * -- data-disableLegendInteraction: Prevent hover/click defaults on legend. Default false
+   * -- data-barWidth: Set the ratio for bar widths. If set to manual it will use barWidthOverride value.
+   * -- data-barWidthOverride: Set the bar width (without a ratio), Requires barWidth to be 'manual'
    * -- data-chartPadding: Additional padding on edges of the chart. Expects object with top, right, bottom, left.
    * -- data-exportWidth: The width of the exported png. @see chartExport()
    * -- data-exportHeight: The height of the exported png. @see chartExport()
@@ -143,6 +145,7 @@
       areaOpacity: 20,
       yRound: 4,
       barWidth: 0.5,
+      barWidthOverride: 'auto',
       // The data for the chart.
       columns: [],
       data: {},
@@ -154,7 +157,8 @@
         'xTickCount', 'yTickCount', 'yTickValues', 'xTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull',
         'stacked', 'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle',
         'title', 'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
-        'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength', 'tickVisibility', 'chartPadding'],
+        'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength', 'tickVisibility', 'chartPadding',
+        'barWidthOverride'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
