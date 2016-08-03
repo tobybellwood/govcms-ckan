@@ -5,6 +5,12 @@ govCMS CKAN provides integration with CKAN (http://ckan.org/). CKAN is a
 powerful data management system that makes data accessible by providing tools to
 streamline publishing, sharing, finding and using data.
 
+Authors
+-------
+This module was created by [Jeremy Graham](https://github.com/jeremy-doghouse) @ [Doghouse Agency](http://doghouse.agency)
+for [GovCMS](https://www.govcms.gov.au/) with assistance and guidance from [Acquia](https://www.acquia.com/)
+and [these contributors](https://github.com/govCMS/govcms-ckan/graphs/contributors).
+
 Submodules
 ----------
 
@@ -124,9 +130,25 @@ Configuration helpers:
 There is a few helpers that include common structure/elements for visualisation configure forms.
 The intention is a plugin configuration form will include these as required.
 ```
-// Get the key selection form elements.
-$key_elements = govcms_ckan_media_visualisation_default_key_config($form, $form_state, $config);
+  // Include default widgets.
+  $widgets = array(
+    'govcms_ckan_media_visualisation_default_key_config',
+    'govcms_ckan_media_visualisation_default_axis_config',
+    'govcms_ckan_media_visualisation_default_grid_config',
+    'govcms_ckan_media_visualisation_default_chart_config',
+  );
+  $config_form = govcms_ckan_media_visualisation_include_form_widgets($form, $form_state, $config, $widgets);
+```
 
-// Get the axis configuraion elements.
-$axis_elements = govcms_ckan_media_visualisation_default_axis_config($form, $form_state, $config);
+Adding custom stlyes to exported charts
+---------------------------------------
+Exported charts (Download as PNG/SVG) must have the css embedded in the SVG, as you may want to add additional
+styling to the exported files, govcms_ckan_display provides a way for you add your own external stylesheets
+that get embedded for export. Example:
+```
+  drupal_add_js(array(
+    'govcmsCkanDisplay' => array(
+      'exportStylesheets' => array(url('path/to/custom/css/graph_export.css')),
+    ),
+  ), 'setting');
 ```

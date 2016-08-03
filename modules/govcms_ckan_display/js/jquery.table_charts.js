@@ -23,19 +23,35 @@
    * -- data-defaultView: Should the chart or table be displayed first. Defaults to 'chart'.
    * -- data-palette: A comma separated list of hex colours to be used for the palette.
    * -- data-grid: Grid lines to use: xy, x or y
+   * -- data-hidePoints: Default is false, gives the ability to hide points. Only applies to line/spline.
+   * -- data-pointSize: Define the point size, default is 2.5
+   * -- data-showTitle : Should a title be rendered within the chart
+   * -- data-title : The title string
    * -- data-xLabel: The optional label to show on the X axis
    * -- data-yLabel: The optional label to show on the Y axis
    * -- data-xTickRotate: The angle to rotate X axis labels
    * -- data-xTickCount: The count of ticks on the X axis
    * -- data-yTickCount: The count of ticks on the Y axis
+   * -- data-yTickValues: Override the tick values on the Y axis (comma separated values)
+   * -- data-xTickValues: Override the tick values on the X axis (comma separated values)
+   * -- data-yTickValueFormat: Format Y axis values in a number format.
+   * -- data-xTickValueFormat: Format X axis values in a number format.
+   * -- data-numberFormatMinLength: Formatting of tick values only applies on numbers with a length gte to this.
    * -- data-xTickCull: The max count of labels on the X axis
-   * -- data-yTickCull: The max count of labels on the Y axis
+   * -- data-xTickCentered: Are the x ticks centered above labels.
+   * -- data-tickVisibility: Determines tick visibility. Options: show, hide-x, hide-y, hide-xy.
    * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
+   * -- data-disableChartInteraction: Disable hover values on the chart. Default false.
+   * -- data-disableLegendInteraction: Prevent hover/click defaults on legend. Default false
+   * -- data-barWidth: Set the ratio for bar widths. If set to manual it will use barWidthOverride value.
+   * -- data-barWidthOverride: Set the bar width (without a ratio), Requires barWidth to be 'manual'
+   * -- data-chartPadding: Additional padding on edges of the chart. Expects object with top, right, bottom, left.
    * -- data-exportWidth: The width of the exported png. @see chartExport()
    * -- data-exportHeight: The height of the exported png. @see chartExport()
    * - Table headings (th) is used as the label and the following attributes can be used
    * -- data-color: Hex colour, alternative to using palette on the table element.
    * -- data-style: The style for the line (dashed, solid)
+   * -- data-type: Override the chart type for a specific column of data.
    * - Each column forms a data set, Table headings can be strings but table values must be Ints.
    * -- If a tbody row has a th (scope=row), this will be used to form the x axis tick labels.
    * -- To ignore a thead th (eg placeholder for a label col) use the data-placeholder=true attr.
@@ -59,7 +75,7 @@
   /*
    * Storage for the chart classes available.
    */
-  var tableChartsChart = {};
+  window.tableChartsChart = window.tableChartsChart || {};
 
   /**
    * tableChart class.
@@ -86,26 +102,50 @@
       chartDomId: 'table-chart-0',
       // The type of chart.
       type: 'line',
+      // Type override with the key/type.
+      types: {},
       // The tableChartChart class used to create the chart.
       chart: 'c3js',
       // Chart settings.
       rotated: false,
       palette: [],
+      paletteOverride: {},
       labels: false,
       styles: [],
+      disabledLegends: [],
+      dataClasses: {},
       grid: null,
+      gridLines: null,
+      showTitle: false,
+      title: 'chart',
+      hidePoints: false,
+      pointSize: 2.5,
       xLabel: null,
       yLabel: null,
       xTickRotate: 0,
       xTickCount: null,
       yTickCount: null,
-      xTickCull: null,
-      yTickCull: null,
+      yTickValues: null,
+      xTickValues: null,
+      yTickValueFormat: null,
+      xTickValueFormat: null,
+      numberFormatMinLength: 5,
+      xTickCull: false,
+      xTickCentered: true,
+      xAxisLabelPos: 'inner-right',
+      yAxisLabelPos: 'inner-top',
+      tickVisibility: 'show',
       stacked: false,
       exportWidth: '',
       exportHeight: '',
+      exportStylesheets: [],
+      chartPadding: {},
+      disableChartInteraction: false,
+      disableLegendInteraction: false,
+      areaOpacity: 20,
       yRound: 4,
       barWidth: 0.5,
+      barWidthOverride: 'auto',
       // The data for the chart.
       columns: [],
       data: {},
@@ -114,8 +154,11 @@
       xLabels: ['x'],
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
-        'xTickCount', 'yTickCount', 'xTickCull', 'yTickCull', 'stacked', 'exportWidth', 'exportHeight',
-        'barWidth', 'yRound'],
+        'xTickCount', 'yTickCount', 'yTickValues', 'xTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull',
+        'stacked', 'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle',
+        'title', 'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
+        'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength', 'tickVisibility', 'chartPadding',
+        'barWidthOverride'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -126,7 +169,9 @@
       // Component prefix used for dom classes and ids.
       component: 'table-chart',
       // Chart Initialized callback
-      chartInitCallback: function () {}
+      chartInitCallback: function () {
+        self.triggerEvent('init:chart');
+      }
     };
 
     // Settings start with defaults and extended by options passed to the constructor.
@@ -148,7 +193,7 @@
       // Available settings are found in the dataAttributes setting. We loop through
       // each of those and if not empty, override the settings.
       $(self.settings.dataAttributes).each(function (i, attr) {
-        val = self.settings.$dom.data(attr);
+        val = self.settings.$dom.data(attr.toLowerCase());
         if (val !== undefined && val !== null && val !== '') {
           self.settings[attr] = val;
         }
@@ -175,22 +220,40 @@
      *   The value for this cell.
      */
     self.parseTableHeading = function ($cell, col) {
-      // Override colour for this data set.
+      // The content of the TH forms the value/key.
+      var value = $cell.html();
+
+      // Override colour for this data column.
       if ($cell.data('color') !== undefined) {
-        self.settings.palette[col] = $cell.data('color');
+        self.settings.paletteOverride[value] = $cell.data('color');
       }
 
       // Currently only style option is dashed and will only work with line.
       // @see http://c3js.org/samples/simple_regions.html
       if ($cell.data('style') !== undefined && $cell.data('style') === 'dashed') {
-        self.settings.styles.push({set: $cell.html(), style: $cell.data('style')});
+        self.settings.styles.push({set: value, style: $cell.data('style')});
+      }
+
+      // Allows a column/heading to define its graph type, overriding the default.
+      if ($cell.data('type') !== undefined) {
+        self.settings.types[value] = $cell.data('type');
+      }
+
+      // Allows a column/heading to hide legends.
+      if ($cell.data('legend') !== undefined && $cell.data('legend') === 'hide') {
+        self.settings.disabledLegends.push(value);
+      }
+
+      // Allows a column/heading applying classes to a dataset.
+      if ($cell.data('class') !== undefined) {
+        self.settings.dataClasses[value] = $cell.data('class');
       }
 
       // Create a group of headings (used for stacking).
-      self.settings.group.push($cell.html());
+      self.settings.group.push(value);
 
       // Return the value for this cell.
-      return $cell.html();
+      return value;
     };
 
     /*
@@ -279,6 +342,7 @@
     self.buildMarkup = function () {
       // Build our chart dom ID, and dom elements we'll need.
       self.$chart = $('<div>');
+      self.$actions = $('<div>').addClass(self.settings.component + '--actions');
       self.$toggle = $('<button>');
 
       // Give the table a unique class and give it a wrapper.
@@ -293,7 +357,10 @@
       self.$toggle.html(self.toggleButtonText())
         .addClass(self.settings.component + '--toggle')
         .click(self.toggleView)
-        .insertAfter(self.$tableWrapper);
+        .appendTo(self.$actions);
+
+      // Add actions to the dom.
+      self.$actions.insertAfter(self.$tableWrapper);
 
       // Add chart placeholder to dom with a unique Id.
       self.$chart.attr('id', self.settings.chartDomId)
@@ -352,9 +419,21 @@
             format: format,
             svg: self.$chart,
             width: self.settings.exportWidth,
-            height: self.settings.exportHeight
+            height: self.settings.exportHeight,
+            exportStylesheets: self.settings.exportStylesheets,
+            filename: self.settings.title
           });
       });
+
+      // Return self for chaining.
+      return self;
+    };
+
+    /*
+     * Trigger an event so other scripts can listen for changes.
+     */
+    self.triggerEvent = function (event) {
+      $(window).trigger({type: 'tableCharts:' + event, el: self});
 
       // Return self for chaining.
       return self;
@@ -367,7 +446,9 @@
       self
         .parseSettings()
         .parseData()
-        .buildMarkup();
+        .triggerEvent('init:parse')
+        .buildMarkup()
+        .triggerEvent('init:dom');
     };
 
     // Init on construct.
@@ -375,124 +456,6 @@
 
     // Return self for chaining.
     return self;
-  };
-
-  /**
-   * The tableCharts c3js implementation.
-   *
-   * @param settings
-   *   The parsed settings from tableCharts.
-   *
-   * TODO: If this gets to large, move to its own file.
-   */
-  tableChartsChart.c3js = function (settings) {
-    // Ensure library is loaded.
-    if (typeof c3 === 'undefined') {
-      alert('c3js library not found');
-      return;
-    }
-
-    // Type of chart is stored in the data.
-    settings.data.type = settings.type;
-
-    // Placeholder for the data columns.
-    settings.data.columns = [];
-
-    // Stacked can be applied to most charts, the stack order used is
-    // the column order.
-    if (settings.stacked) {
-      settings.data.groups = [settings.group];
-    }
-
-    // Apply styles (currently only works with lines and dashes)
-    if (settings.styles.length) {
-      settings.data.regions = {};
-      $(settings.styles).each(function (i, d){
-        settings.data.regions[d.set] = [{style: d.style}];
-      });
-    }
-
-    // Define the axis settings.
-    var axis = {
-      rotated: settings.rotated,
-      x: {label: settings.xLabel, tick: {}},
-      y: {label: settings.yLabel, tick: {}}
-    };
-
-    // Define the tick rotation.
-    if (settings.xTickRotate != 0) {
-      axis.x.tick.rotate = parseInt(settings.xTickRotate);
-    }
-
-    // Define the tick counts.
-    if (settings.xTickCount) {
-      axis.x.tick.count = parseInt(settings.xTickCount);
-    }
-    if (settings.yTickCount) {
-      axis.y.tick.count = parseInt(settings.yTickCount);
-    }
-
-    // Define the tick label culling (max labels).
-    if (settings.xTickCull) {
-      axis.x.tick.culling = {max: parseInt(settings.xTickCull)};
-    }
-    if (settings.yTickCull) {
-      axis.y.tick.culling = {max: parseInt(settings.yTickCull)};
-    }
-
-    // Perform rounding on Y axis values.
-    axis.y.tick.format = function (y) {
-      var places = Math.pow(10, parseInt(settings.yRound));
-      return Math.round(y * places) / places;
-    };
-
-    // Add X axis labels.
-    if (settings.xLabels.length > 1) {
-      settings.data.x = 'x';
-      settings.data.columns.push(settings.xLabels);
-      // this needed to load string x value
-      axis.x.type = 'category';
-    }
-
-    // Show labels on data points?
-    settings.data.labels = settings.labels;
-
-    // Add the data columns.
-    $(settings.columns).each(function (i, col) {
-      settings.data.columns.push(col);
-    });
-
-    // Options structure to be passed to c3
-    var options = {
-      bindto: '#' + settings.chartDomId,
-      data: settings.data,
-      axis: axis,
-      color: {
-        pattern: settings.palette
-      },
-      oninit: settings.chartInitCallback
-    };
-
-    // Add optional grid lines.
-    switch (settings.grid) {
-      case 'xy':
-        options.grid = {x: {show: true}, y: {show: true}};
-        break;
-      case 'x':
-        options.grid = {x: {show: true}};
-        break;
-      case 'y':
-        options.grid = {y: {show: true}};
-        break;
-    }
-
-    // Provide a width ratio for bars.
-    if (settings.type == 'bar') {
-      options.bar = {width: {ratio: settings.barWidth}}
-    }
-
-    // Create chart.
-    c3.generate(options);
   };
 
   /**

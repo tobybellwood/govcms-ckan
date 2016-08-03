@@ -61,10 +61,9 @@ function govcms_ckan_media_field_formatter_info() {
         'export_width' => NULL,
         'export_height' => NULL,
         'palette' => NULL,
-        'x_tick_count' => NULL,
-        'y_tick_count' => NULL,
-        'x_tick_cull' => NULL,
-        'y_tick_cull' => NULL,
+        'x_axis_label_position' => 'inner-right',
+        'y_axis_label_position' => 'inner-top',
+        'x_axis_tick_centered' => 1,
       ),
     ),
   );
@@ -131,6 +130,41 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
     '#description' => t('Palette is a comma separated list of hex values. If not set, default palette is applied.'),
   );
 
+  $element['x_axis_label_position'] = array(
+    '#title' => t('X axis label position'),
+    '#type' => 'select',
+    '#default_value' => $settings['x_axis_label_position'],
+    '#options' => array(
+      'inner-right' => t('Inner right'),
+      'inner-center' => t('Inner center'),
+      'inner-left' => t('Inner left'),
+      'outer-right' => t('Outer right'),
+      'outer-center' => t('Outer center'),
+      'outer-left' => t('Outer left'),
+    ),
+  );
+
+  $element['y_axis_label_position'] = array(
+    '#title' => t('Y axis label position'),
+    '#type' => 'select',
+    '#default_value' => $settings['y_axis_label_position'],
+    '#options' => array(
+      'inner-top' => t('Inner top'),
+      'inner-middle' => t('Inner middle'),
+      'inner-bottom' => t('Inner bottom'),
+      'outer-top' => t('Outer top'),
+      'outer-middle' => t('Outer middle'),
+      'outer-bottom' => t('Outer bottom'),
+    ),
+  );
+
+  $element['x_axis_tick_centered'] = array(
+    '#title' => t('Center X axis tick above label'),
+    '#description' => t('When enabled the tick will display directly above the label on a the X axis.'),
+    '#type' => 'checkbox',
+    '#default_value' => $settings['x_axis_tick_centered'],
+  );
+
   return $element;
 }
 
@@ -140,10 +174,13 @@ function govcms_ckan_media_field_formatter_settings_form($field, $instance, $vie
 function govcms_ckan_media_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $summary = array();
+  // Use the form to populate the labels.
+  $form_state = array();
+  $config_form = govcms_ckan_media_field_formatter_settings_form($field, $instance, $view_mode, array(), $form_state);
   // Dynamically create summary from settings.
   foreach ($display['settings'] as $key => $value) {
     if (!empty($value)) {
-      $summary[] = $key . ': ' . filter_xss($value);
+      $summary[] = $config_form[$key]['#title'] . ': ' . filter_xss($value);
     }
   }
   return !empty($summary) ? implode('<br />', $summary) : t('Default display');

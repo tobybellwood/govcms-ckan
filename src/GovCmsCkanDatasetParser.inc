@@ -65,9 +65,25 @@ class GovCmsCkanDatasetParser {
   private $tableAttributes = array();
 
   /**
-   * GovCmsCkanDatasetParser constructor.
+   * Attributes for a specific column.
    */
-  public function __construct() {
+  private $columnAttributes = array();
+
+  /**
+   * Label replacements.
+   */
+  private $labelReplacements = array();
+
+  /**
+   * GovCmsCkanDatasetParser constructor.
+   *
+   * @param object $result
+   *   Instantiate with result set, this can also be done later with setResult.
+   */
+  public function __construct($result = NULL) {
+    if (!empty($result)) {
+      $this->setResult($result);
+    }
   }
 
   /**
@@ -82,6 +98,38 @@ class GovCmsCkanDatasetParser {
    */
   public function setKeys($keys = array()) {
     $this->keys = $keys;
+    return $this;
+  }
+
+  /**
+   * Re-orders the keys as per provided order array.
+   *
+   * @param array $order
+   *   An array keyed by the key (original) name, the value for each should be
+   *   an array containing a weight key. The lower the weight the higher it
+   *   appears in the list. If no weight found, default order is used.
+   * @param string $weight_key
+   *   The key that contains the weight.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setKeysOrder($order = array(), $weight_key = 'weight') {
+    $items = array();
+    $new_order = array();
+    // Give each key a weight either the original pos or overridden value.
+    $i = 0;
+    foreach ($this->keys as $pos => $key) {
+      $weight = isset($order[$key][$weight_key]) ? $order[$key][$weight_key] : $i;
+      $items[] = array('key' => $key, 'weight' => $weight);
+      $i++;
+    }
+    // Sort and create a new array of keys in the correct order.
+    uasort($items, array($this, 'sortWeight'));
+    foreach ($items as $item) {
+      $new_order[$item['key']] = $item['key'];
+    }
+    $this->keys = $new_order;
     return $this;
   }
 
@@ -131,6 +179,7 @@ class GovCmsCkanDatasetParser {
   public function setResult($result) {
     $this->result = $result;
     $this->records = $result->records;
+    $this->cleanseKeys();
     return $this;
   }
 
@@ -171,9 +220,76 @@ class GovCmsCkanDatasetParser {
    * @return $this
    *   Return self for chaining.
    */
-  public function setTableAttributes($attributes) {
+  public function setTableAttributes($attributes = array()) {
     $this->tableAttributes = array_merge($this->tableAttributes, $attributes);
     return $this;
+  }
+
+  /**
+   * Adds attributes to the column headers.
+   *
+   * @param array $column_attributes
+   *   An array keyed by the column/td value with its value being an array of
+   *   attributes to be added to that td.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setColumnAttributes($column_attributes = array()) {
+    $this->columnAttributes = $column_attributes;
+    return $this;
+  }
+
+  /**
+   * Adds label replacements.
+   *
+   * @param array $replacements
+   *   An array of replacements keyed by the original label and the value is
+   *   the replacement value.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setLabelReplacements($replacements = array()) {
+    $this->labelReplacements = array_merge($this->labelReplacements, $replacements);
+    return $this;
+  }
+
+  /**
+   * Normalises attributes so all keys are lowercase and removes empty attrs.
+   *
+   * @return array
+   *   An array of attributes.
+   */
+  public function normaliseAttributes($attributes) {
+    $attrs = array();
+    foreach ($attributes as $key => $value) {
+      if ($value != '') {
+        $attrs[strtolower($key)] = $value;
+      }
+    }
+    return $attrs;
+  }
+
+  /**
+   * Return the unique labels for a given key.
+   *
+   * @param string $key
+   *   The key to filter by.
+   *
+   * @return array
+   *   An array of keys
+   */
+  public function getUniqueLabels($key = NULL) {
+    $labels = array();
+    if (!empty($this->records) && is_array($this->records) && !empty($key)) {
+      foreach ($this->records as $record) {
+        if (isset($record->{$key})) {
+          $labels[$record->{$key}] = $record->{$key};
+        }
+      }
+    }
+    return $labels;
   }
 
   /**
@@ -203,7 +319,7 @@ class GovCmsCkanDatasetParser {
 
       // Add any additional attributes and a generic class.
       $this->tableAttributes['class'][] = 'govcms-ckan-table';
-      $tables[$group_key]['attributes'] = $this->tableAttributes;
+      $tables[$group_key]['attributes'] = $this->normaliseAttributes($this->tableAttributes);
     }
 
     // Format for renderable array if required.
@@ -271,11 +387,70 @@ class GovCmsCkanDatasetParser {
    *   col is empty, eg. placeholder it will be marked as empty.
    */
   private function createHeaderCell($scope = 'row', $value = NULL) {
-    $cell = array('data' => $value, 'header' => TRUE, 'scope' => $scope);
+    $cell = array('data' => $this->parseLabel($value), 'header' => TRUE, 'scope' => $scope);
     if (empty($value) && $scope == 'col') {
       $cell['data-placeholder'] = 'true';
     }
+    elseif ($scope == 'col' && !empty($this->columnAttributes[$value])) {
+      // Add any additional column attributes.
+      $cell = array_merge($cell, $this->normaliseAttributes($this->columnAttributes[$value]));
+    }
     return $cell;
+  }
+
+  /**
+   * A helper to cleanse a value by removing new lines.
+   *
+   * @param string $value
+   *   The value to cleanse.
+   *
+   * @return string
+   *   The cleansed value.
+   */
+  public function cleanseValue($value = NULL) {
+    return str_replace(array("\r\n", "\n", "\r"), ' ', $value);
+  }
+
+  /**
+   * A helper to cleanse all keys in the record set.
+   */
+  public function cleanseKeys() {
+    foreach ($this->records as $i => $record) {
+      $clean_record = array();
+      foreach ((array) $record as $key => $value) {
+        $clean_record[$this->cleanseValue($key)] = $value;
+      }
+      $this->records[$i] = (object) $clean_record;
+    }
+  }
+
+  /**
+   * Applies any label replacements to label values.
+   *
+   * @param string $value
+   *   The original label key.
+   *
+   * @return string
+   *   If a replacement value exists return the replacement, else the original
+   *   value.
+   */
+  private function parseLabel($value) {
+    return !empty($this->labelReplacements[$value]) ? $this->labelReplacements[$value] : $value;
+  }
+
+  /**
+   * Callback for uasort by weight.
+   *
+   * Exact copy of drupal_sort_weight() but included here to ensure class has no
+   * dependance on drupal.
+   */
+  private function sortWeight($a, $b) {
+    $a_weight = (is_array($a) && isset($a['weight'])) ? $a['weight'] : 0;
+    $b_weight = (is_array($b) && isset($b['weight'])) ? $b['weight'] : 0;
+    if ($a_weight == $b_weight) {
+      return 0;
+    }
+    return ($a_weight < $b_weight) ? -1 : 1;
   }
 
   /**
@@ -316,7 +491,7 @@ class GovCmsCkanDatasetParser {
 
     // Add keys as header.
     foreach ($keys as $key) {
-      $table['header'][] = $this->labelKey == $key ? $this->createHeaderCell('col') : $key;
+      $table['header'][] = $this->labelKey == $key ? $this->createHeaderCell('col') : $this->createHeaderCell('col', $key);
     }
 
     // For each record.
@@ -326,7 +501,7 @@ class GovCmsCkanDatasetParser {
       foreach ($keys as $key) {
         // If label key is disabled ignore the 'none' key and continue.
         if (empty($key)) {
-	  $row[] = NULL;
+          $row[] = NULL;
           continue;
         }
 
@@ -359,7 +534,7 @@ class GovCmsCkanDatasetParser {
       $data_col_num = $col_num + 1;
 
       // Append labelKey value to header.
-      $table['header'][] = $record->{$this->labelKey};
+      $table['header'][] = $this->createHeaderCell('col', $record->{$this->labelKey});
 
       // Make the rows from the keys.
       foreach ($this->keys as $row_num => $key) {

@@ -10,15 +10,17 @@
     attach: function (context, settings) {
 
       // Only auto add if we have settings.
-      if (settings.govcmsCkanDisplay === undefined) {
+      if (settings.govcmsCkanDisplay === undefined || !settings.govcmsCkanDisplay.tableChartSelectors) {
         return;
       }
 
       // Tables to act on.
       var $tables = $(settings.govcmsCkanDisplay.tableChartSelectors.join(','), context);
 
-      // Add tableCharts.
-      $tables.once('table-charts').tableCharts();
+      // Add tableCharts, including export stylesheets.
+      $tables.once('table-charts').tableCharts({
+        exportStylesheets: settings.govcmsCkanDisplay.exportStylesheets
+      });
 
     }
   };
