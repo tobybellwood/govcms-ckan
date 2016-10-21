@@ -131,7 +131,13 @@
     self.includeExportStyles = function () {
       // Check if styles need to be added first.
       if (!self.settings.includeExportStyles) {
-        return;
+        return self;
+      }
+
+      // jQuery 1.5+ is required to use exported styles as deferreds are used.
+      // See: https://api.jquery.com/jquery.when/
+      if (typeof $.when !== 'function') {
+        return self;
       }
 
       // If export stylesheets are provided, we load their content.

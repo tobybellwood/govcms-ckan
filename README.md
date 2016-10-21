@@ -152,3 +152,4 @@ that get embedded for export. Example:
     ),
   ), 'setting');
 ```
+NOTE: This requires jQuery 1.5+
