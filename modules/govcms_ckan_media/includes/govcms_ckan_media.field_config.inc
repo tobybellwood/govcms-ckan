@@ -587,6 +587,63 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     ),
   );
 
+  $element['axis_settings']['x_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Axis label type'),
+    '#description' => t('Force interpretation of X labels as a specific type. Useful for dates (time series)'),
+    '#options' => array(
+      '' => t('Automatic (Indexed if numeric, category if not)'),
+      'indexed' => t('Indexed (Numeric)'),
+      'category' => t('Category (Non-numeric)'),
+      'timeseries' => t('Date or time'),
+    ),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_type'),
+  );
+
+  $timeseries_legend = '%d = day, %m = month, %Y = year, %H = hour, %M = min, %S = second';
+  $element['axis_settings']['x_date_format'] = array(
+    '#type' => 'container',
+    'input' => array(
+      '#type' => 'textfield',
+      '#title' => t('Date Input Format'),
+      '#description' => t('How is the date formatted in the dataset. Replacements: %replacements', array('%replacements' => $timeseries_legend)),
+      '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_date_format/input'),
+    ),
+    'output' => array(
+      '#type' => 'textfield',
+      '#title' => t('Date Output Format'),
+      '#description' => t('How the date is formatted on the x axis. Replacements: %replacements', array('%replacements' => $timeseries_legend)),
+      '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_date_format/output'),
+    ),
+    '#states' => array(
+      'visible' => array(
+        govcms_ckan_media_get_element_selector('select', 'axis_settings_x_type') => array('value' => 'timeseries'),
+      ),
+    ),
+  );
+
+  $x_padding = govcms_ckan_get_config_value($config, 'axis_settings/x_padding', array());
+  $element['axis_settings']['x_padding'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('X Axis padding'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#attributes' => array('class' => array('container-inline')),
+    '#description' => '<p>' . t('Optionally define the padding at each end of the X axis. If left empty this will be automatically calculated.') . '</p>',
+    'left' => array(
+      '#type' => 'textfield',
+      '#title' => t('Left'),
+      '#size' => 10,
+      '#default_value' => govcms_ckan_get_config_value($x_padding, 'left'),
+    ),
+    'right' => array(
+      '#type' => 'textfield',
+      '#title' => t('Right'),
+      '#size' => 10,
+      '#default_value' => govcms_ckan_get_config_value($x_padding, 'right'),
+    ),
+  );
+
   $element['axis_settings']['y_axis_title'] = govcms_ckan_media_form_title_element(t('Y Axis'));
 
   $element['axis_settings']['y_tick_count'] = array(
@@ -613,6 +670,39 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
       '' => t('None'),
       ' ' => t('Space separated Eg. 10 000'),
       ',' => t('Comma separated Eg. 10,000'),
+    ),
+  );
+
+  $element['axis_settings']['y_rounding'] = array(
+    '#title' => t('Y Tick Value Rounding'),
+    '#type' => 'select',
+    '#options' => array('' => 'Automatic'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/y_rounding'),
+    '#description' => t('Force to rounding to a specific decimal place. Automatic will only show decimal places if required.'),
+  );
+  for ($i = 1; $i <= 4; $i++) {
+    $element['axis_settings']['y_rounding']['#options'][$i] = t('@i places', array('@i' => $i));
+  }
+
+  $y_padding = govcms_ckan_get_config_value($config, 'axis_settings/y_padding', array());
+  $element['axis_settings']['y_padding'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Y Axis padding'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#attributes' => array('class' => array('container-inline')),
+    '#description' => '<p>' . t('Optionally define the padding at each end of the X axis. If left empty this will be automatically calculated.') . '</p>',
+    'top' => array(
+      '#type' => 'textfield',
+      '#title' => t('Top'),
+      '#size' => 10,
+      '#default_value' => govcms_ckan_get_config_value($y_padding, 'top'),
+    ),
+    'bottom' => array(
+      '#type' => 'textfield',
+      '#title' => t('Bottom'),
+      '#size' => 10,
+      '#default_value' => govcms_ckan_get_config_value($y_padding, 'bottom'),
     ),
   );
 
@@ -869,4 +959,28 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
  */
 function govcms_ckan_media_form_title_element($title) {
   return array('#type' => 'markup', '#markup' => '<h3 class="govcms-ckan-media--settings-title">' . $title . '</h3>');
+}
+
+/**
+ * A Helper to provide a selector for a config form element.
+ *
+ * This is used for drupal form state selectors. See drupal_process_states().
+ * We make some assumptions for language and delta.
+ *
+ * @param string $tag
+ *   The element tag name, eg. input or select.
+ * @param string $name
+ *   The name of the element.
+ * @param int $delta
+ *   The delta of the item, currently this is not able to be determined from
+ *   where this will be called. As there should only ever be one item, a delta
+ *   of 0 should be correct.
+ * @param string $lang
+ *   Like the delta, we default to LANGUAGE_NONE for the language.
+ *
+ * @return string
+ *   The selector of the element using the id.
+ */
+function govcms_ckan_media_get_element_selector($tag, $name, $delta = 0, $lang = LANGUAGE_NONE) {
+  return $tag . '#edit-ckan-visualisation-' . $lang . '-' . $delta . '-config-visualisation-config-' . drupal_html_class($name);
 }
