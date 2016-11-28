@@ -126,14 +126,88 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
     $config = $file->{$field_name}[$langcode][$delta]['config'];
   }
 
+  // Hide preview as it fairly useless and always the same.
+  if (!empty($form['preview'])) {
+    $form['preview']['#access'] = FALSE;
+  }
+
+  // Get Resource metadata.
+  $resource_id = _govcms_ckan_media_get_resource_id_from_widget_form($form_state);
+  $result_meta = govcms_ckan_client_request_meta($resource_id);
+
+  // Ajax wrapper and parents for including the visualisation settings.
+  $vis_wrapper_id = 'visualisation-settings-' . $delta;
+  $vis_parents = array('ckan_visualisation', $langcode, $delta, 'config');
+
+  // Provide ability to change the dataset url.
+  if ($result_meta->valid && isset($result_meta->data->id)) {
+    $handler = new MediaInternetGovCmsCkanHandler('');
+    $dataset_url = $handler->buildResourceUrl($result_meta->data->package_id, $result_meta->data->id);
+
+    // Only allow changing dataset if is already saved.
+    $allow_change_dataset = isset($form_state['file']);
+
+    // Current dataset URL.
+    $form['dataset_url_current'] = array(
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => t('Dataset resource: !link', array(
+        '!link' => l($dataset_url, $dataset_url, array(
+          'attributes' => array('target' => '_blank'),
+        )),
+      )),
+      '#weight' => -9,
+    );
+
+    // Confirmation for changing dataset URL.
+    $form['dataset_url_change'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Change the CKAN dataset resource'),
+      '#weight' => -8,
+      '#access' => $allow_change_dataset,
+    );
+
+    // Change URL container, only visible when above checked.
+    $form['dataset'] = array(
+      '#type' => 'container',
+      '#access' => $allow_change_dataset,
+      '#weight' => -7,
+      '#states' => array(
+        'visible' => array(
+          'input[name=dataset_url_change]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    // Textfield for new dataset.
+    $form['dataset']['dataset_url'] = array(
+      '#type' => 'textfield',
+      '#title' => t('New CKAN dataset resource URL'),
+      '#description' => t('<strong>Warning:</strong> Changing the dataset url may have adverse effects, especially if the dataset has a different structure.'),
+      '#default_value' => $dataset_url,
+    );
+
+    // Refresh the keys with the new dataset URL.
+    $form['dataset']['dataset_url_refresh'] = array(
+      '#type' => 'submit',
+      '#value' => t('Refresh Keys'),
+      '#submit' => array('govcms_ckan_media_field_widget_visualisation_form_refresh_dataset'),
+      '#element_parents' => $vis_parents,
+      '#ajax' => array(
+        'callback' => 'govcms_ckan_media_field_widget_visualisation_form',
+        'wrapper' => $vis_wrapper_id,
+      ),
+    );
+
+    // Add the submit handler to handle save.
+    $form['actions']['submit']['#submit'][] = '_govcms_ckan_media_field_widget_form_change_dataset_url';
+  }
+
   // Base widget is a fieldset tree.
   $widget = $element + array(
     '#type' => 'fieldset',
     '#tree' => TRUE,
   );
-
-  // Ajax wrapper for including the visualisation settings.
-  $vis_wrapper_id = 'visualisation-settings-' . $delta;
 
   // The visualisation selector. This will ajax load the configuration form for
   // the selected visualisation.
@@ -143,6 +217,7 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
     '#default_value' => isset($config['visualisation']) ? $config['visualisation'] : NULL,
     '#required' => ($form_state['build_info']['form_id'] != 'field_ui_field_edit_form'),
     '#options' => _govcms_ckan_media_field_widget_visualisation_options(),
+    '#element_parents' => $vis_parents,
     '#description' => t('How the data from this CKAN dataset will be presented when rendered on the page.'),
     '#ajax' => array(
       'callback' => 'govcms_ckan_media_field_widget_visualisation_form',
@@ -170,16 +245,50 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
 }
 
 /**
- * Ajax callback for changing visualisations.
+ * Change the dataset url submit handler.
+ */
+function _govcms_ckan_media_field_widget_form_change_dataset_url($form, &$form_state) {
+  // Only proceed if explicitly set.
+  if (!$form_state['values']['dataset_url_change']) {
+    return;
+  }
+
+  $handler = new MediaInternetGovCmsCkanHandler('');
+  $file = $form_state['file'];
+  $new_dataset_url = $form_state['values']['dataset_url'];
+  $old_dataset_url = $handler->buildResourceUrl($file->package_id, $file->resource_id);
+
+  // If the dataset url has changed.
+  if ($old_dataset_url != $new_dataset_url) {
+    $uri = $handler->parse($new_dataset_url);
+    if ($uri !== FALSE) {
+      // URI is valid.
+      $file->uri = $uri;
+      file_save($file);
+      drupal_set_message(t('Changed the CKAN dataset to a new resource.'));
+    }
+    else {
+      drupal_set_message(t('Invalid CKAN dataset URL provided, resource has not been changed.'), 'error');
+    }
+  }
+}
+
+/**
+ * Ajax callback for changing visualisations and refreshing settings.
  */
 function govcms_ckan_media_field_widget_visualisation_form($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
-  $parents = $form_state['triggering_element']['#parents'];
-  array_pop($parents);
-  $el = drupal_array_get_nested_value($form, $parents);
+  $el = drupal_array_get_nested_value($form, $form_state['triggering_element']['#element_parents']);
   return $el['visualisation_config'];
 }
 
+/**
+ * Ajax submit handler for refreshing dataset settings.
+ */
+function govcms_ckan_media_field_widget_visualisation_form_refresh_dataset($form, &$form_state) {
+  $form_state['rebuild'] = TRUE;
+  $form_state['storage']['embed_code'] = $form_state['values']['dataset_url'];
+}
 
 /************
  * Helpers.
@@ -232,6 +341,30 @@ function _govcms_ckan_media_field_widget_visualisation_options() {
     $options[$plugin['name']] = $plugin['title'];
   }
   return $options;
+}
+
+/**
+ * Get the resource ID from the file entity form.
+ *
+ * @param array $form_state
+ *   The current form state.
+ *
+ * @return string
+ *   The resource ID.
+ */
+function _govcms_ckan_media_get_resource_id_from_widget_form($form_state) {
+  // We need a resource_id, however this file might not be saved yet, if it is
+  // we can get it from the entity, otherwise, need to re-parse the embed code.
+  if (isset($form_state['storage']['embed_code'])) {
+    $embed_code = $form_state['storage']['embed_code'];
+    $handler = new MediaInternetGovCmsCkanHandler($embed_code);
+    $uri = $handler->parse($embed_code);
+    return $handler->parseIdFromUri($uri);
+  }
+  elseif (isset($form_state['file'])) {
+    return $form_state['file']->resource_id;
+  }
+  return NULL;
 }
 
 
@@ -288,21 +421,9 @@ function govcms_ckan_media_visualisation_include_form_widgets($form, &$form_stat
 function govcms_ckan_media_visualisation_default_key_config($form, &$form_state, $config = array(), $key_type = 'numeric') {
   $form = array();
 
-  // We need a resource_id, however this file might not be saved yet, if it is
-  // we can get it from the entity, otherwise, need to re-parse the embed code.
-  if (isset($form_state['file'])) {
-    $resource_id = $form_state['file']->resource_id;
-  }
-  else {
-    $embed_code = $form_state['storage']['embed_code'];
-    $handler = new MediaInternetGovCmsCkanHandler($embed_code);
-    $uri = $handler->parse($embed_code);
-    $resource_id = $handler->parseIdFromUri($uri);
-  }
-
   // Make a request to obtain the fields.
-  $client = govcms_ckan_client();
-  $result = $client->get('action/datastore_search', array('id' => $resource_id));
+  $resource_id = _govcms_ckan_media_get_resource_id_from_widget_form($form_state);
+  $result = govcms_ckan_client_request_records($resource_id);
 
   // If something went wrong with request we cannot continue.
   if ($result->valid === FALSE || !isset($result->data->fields)) {
