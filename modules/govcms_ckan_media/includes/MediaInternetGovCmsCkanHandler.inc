@@ -181,7 +181,8 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
    */
   public function getBaseHost() {
     $url_parts = parse_url($this->baseUrl);
-    return (!empty($url_parts['host']) ? $url_parts['host'] : NULL);
+    $port = (!empty($url_parts['port']) ? ':' . $url_parts['port'] : NULL);
+    return (!empty($url_parts['host']) ? $url_parts['host'] . $port : NULL);
   }
 
 }
