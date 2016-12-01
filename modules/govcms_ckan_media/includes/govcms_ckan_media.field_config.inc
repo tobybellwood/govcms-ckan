@@ -249,7 +249,7 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
  */
 function _govcms_ckan_media_field_widget_form_change_dataset_url($form, &$form_state) {
   // Only proceed if explicitly set.
-  if (!$form_state['values']['dataset_url_change']) {
+  if (empty($form_state['values']['dataset_url_change'])) {
     return;
   }
 
