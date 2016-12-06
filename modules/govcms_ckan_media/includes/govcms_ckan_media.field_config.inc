@@ -185,6 +185,7 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
       '#title' => t('New CKAN dataset resource URL'),
       '#description' => t('<strong>Warning:</strong> Changing the dataset url may have adverse effects, especially if the dataset has a different structure.'),
       '#default_value' => $dataset_url,
+      '#maxlength' => 2083,
     );
 
     // Refresh the keys with the new dataset URL.
