@@ -232,7 +232,8 @@ function govcms_ckan_client() {
  */
 function govcms_ckan_client_request_records($resource_id = NULL, $search = NULL, $filters = NULL) {
   $client = govcms_ckan_client();
-  $query = array('id' => $resource_id, 'limit' => GOVCMS_CKAN_DATASET_RECORD_LIMIT);
+  $limit = variable_get('govcms_ckan_dataset_record_limit', GOVCMS_CKAN_DATASET_RECORD_LIMIT);
+  $query = array('id' => $resource_id, 'limit' => $limit);
 
   if (!empty($search)) {
     $query += array('q' => $search);
