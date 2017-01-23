@@ -31,7 +31,7 @@ class GovCmsCkanClient {
    */
   private $apiUrl;
   private $apiKey;
-  private $authHeader;
+  private $authHeader = 'Authorization';
   private $apiPath = '/api/%d/';
   private $apiVersion = 3;
 
@@ -83,8 +83,10 @@ class GovCmsCkanClient {
   public function __construct($base_url, $api_key = NULL, $auth_header = "Authorization", $api_version = 3) {
     $this->apiUrl = $base_url;
     $this->apiKey = $api_key;
-    $this->authHeader = $auth_header;
     $this->apiVersion = $api_version;
+    if (!empty($auth_header)) {
+      $this->authHeader = $auth_header;
+    }
   }
 
   /**
