@@ -181,7 +181,23 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
    */
   public function getBaseHost() {
     $url_parts = parse_url($this->baseUrl);
-    return (!empty($url_parts['host']) ? $url_parts['host'] : NULL);
+    $port = (!empty($url_parts['port']) ? ':' . $url_parts['port'] : NULL);
+    return (!empty($url_parts['host']) ? $url_parts['host'] . $port : NULL);
+  }
+
+  /**
+   * Build a resource url.
+   *
+   * @param string $package_id
+   *   The package id for the resource.
+   * @param string $resource_id
+   *   The resource id for the resource.
+   *
+   * @return string
+   *   Return a valid url for the full resource.
+   */
+  public function buildResourceUrl($package_id, $resource_id) {
+    return $this->baseUrl . '/dataset/' . $package_id . '/resource/' . $resource_id;
   }
 
 }

@@ -126,14 +126,89 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
     $config = $file->{$field_name}[$langcode][$delta]['config'];
   }
 
+  // Hide preview as it fairly useless and always the same.
+  if (!empty($form['preview'])) {
+    $form['preview']['#access'] = FALSE;
+  }
+
+  // Get Resource metadata.
+  $resource_id = _govcms_ckan_media_get_resource_id_from_widget_form($form_state);
+  $result_meta = govcms_ckan_client_request_meta($resource_id);
+
+  // Ajax wrapper and parents for including the visualisation settings.
+  $vis_wrapper_id = 'visualisation-settings-' . $delta;
+  $vis_parents = array('ckan_visualisation', $langcode, $delta, 'config');
+
+  // Provide ability to change the dataset url.
+  if ($result_meta->valid && isset($result_meta->data->id)) {
+    $handler = new MediaInternetGovCmsCkanHandler('');
+    $dataset_url = $handler->buildResourceUrl($result_meta->data->package_id, $result_meta->data->id);
+
+    // Only allow changing dataset if is already saved.
+    $allow_change_dataset = isset($form_state['file']);
+
+    // Current dataset URL.
+    $form['dataset_url_current'] = array(
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => t('Dataset resource: !link', array(
+        '!link' => l($dataset_url, $dataset_url, array(
+          'attributes' => array('target' => '_blank'),
+        )),
+      )),
+      '#weight' => -9,
+    );
+
+    // Confirmation for changing dataset URL.
+    $form['dataset_url_change'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Change the CKAN dataset resource'),
+      '#weight' => -8,
+      '#access' => $allow_change_dataset,
+    );
+
+    // Change URL container, only visible when above checked.
+    $form['dataset'] = array(
+      '#type' => 'container',
+      '#access' => $allow_change_dataset,
+      '#weight' => -7,
+      '#states' => array(
+        'visible' => array(
+          'input[name=dataset_url_change]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    // Textfield for new dataset.
+    $form['dataset']['dataset_url'] = array(
+      '#type' => 'textfield',
+      '#title' => t('New CKAN dataset resource URL'),
+      '#description' => t('<strong>Warning:</strong> Changing the dataset url may have adverse effects, especially if the dataset has a different structure.'),
+      '#default_value' => $dataset_url,
+      '#maxlength' => 2083,
+    );
+
+    // Refresh the keys with the new dataset URL.
+    $form['dataset']['dataset_url_refresh'] = array(
+      '#type' => 'submit',
+      '#value' => t('Refresh Keys'),
+      '#submit' => array('govcms_ckan_media_field_widget_visualisation_form_refresh_dataset'),
+      '#element_parents' => $vis_parents,
+      '#ajax' => array(
+        'callback' => 'govcms_ckan_media_field_widget_visualisation_form',
+        'wrapper' => $vis_wrapper_id,
+      ),
+    );
+
+    // Add the submit handler to handle save.
+    $form['actions']['submit']['#submit'][] = '_govcms_ckan_media_field_widget_form_change_dataset_url';
+  }
+
   // Base widget is a fieldset tree.
   $widget = $element + array(
     '#type' => 'fieldset',
     '#tree' => TRUE,
   );
-
-  // Ajax wrapper for including the visualisation settings.
-  $vis_wrapper_id = 'visualisation-settings-' . $delta;
 
   // The visualisation selector. This will ajax load the configuration form for
   // the selected visualisation.
@@ -143,6 +218,7 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
     '#default_value' => isset($config['visualisation']) ? $config['visualisation'] : NULL,
     '#required' => ($form_state['build_info']['form_id'] != 'field_ui_field_edit_form'),
     '#options' => _govcms_ckan_media_field_widget_visualisation_options(),
+    '#element_parents' => $vis_parents,
     '#description' => t('How the data from this CKAN dataset will be presented when rendered on the page.'),
     '#ajax' => array(
       'callback' => 'govcms_ckan_media_field_widget_visualisation_form',
@@ -170,16 +246,50 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
 }
 
 /**
- * Ajax callback for changing visualisations.
+ * Change the dataset url submit handler.
+ */
+function _govcms_ckan_media_field_widget_form_change_dataset_url($form, &$form_state) {
+  // Only proceed if explicitly set.
+  if (empty($form_state['values']['dataset_url_change'])) {
+    return;
+  }
+
+  $handler = new MediaInternetGovCmsCkanHandler('');
+  $file = $form_state['file'];
+  $new_dataset_url = $form_state['values']['dataset_url'];
+  $old_dataset_url = $handler->buildResourceUrl($file->package_id, $file->resource_id);
+
+  // If the dataset url has changed.
+  if ($old_dataset_url != $new_dataset_url) {
+    $uri = $handler->parse($new_dataset_url);
+    if ($uri !== FALSE) {
+      // URI is valid.
+      $file->uri = $uri;
+      file_save($file);
+      drupal_set_message(t('Changed the CKAN dataset to a new resource.'));
+    }
+    else {
+      drupal_set_message(t('Invalid CKAN dataset URL provided, resource has not been changed.'), 'error');
+    }
+  }
+}
+
+/**
+ * Ajax callback for changing visualisations and refreshing settings.
  */
 function govcms_ckan_media_field_widget_visualisation_form($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
-  $parents = $form_state['triggering_element']['#parents'];
-  array_pop($parents);
-  $el = drupal_array_get_nested_value($form, $parents);
+  $el = drupal_array_get_nested_value($form, $form_state['triggering_element']['#element_parents']);
   return $el['visualisation_config'];
 }
 
+/**
+ * Ajax submit handler for refreshing dataset settings.
+ */
+function govcms_ckan_media_field_widget_visualisation_form_refresh_dataset($form, &$form_state) {
+  $form_state['rebuild'] = TRUE;
+  $form_state['storage']['embed_code'] = $form_state['values']['dataset_url'];
+}
 
 /************
  * Helpers.
@@ -232,6 +342,30 @@ function _govcms_ckan_media_field_widget_visualisation_options() {
     $options[$plugin['name']] = $plugin['title'];
   }
   return $options;
+}
+
+/**
+ * Get the resource ID from the file entity form.
+ *
+ * @param array $form_state
+ *   The current form state.
+ *
+ * @return string
+ *   The resource ID.
+ */
+function _govcms_ckan_media_get_resource_id_from_widget_form($form_state) {
+  // We need a resource_id, however this file might not be saved yet, if it is
+  // we can get it from the entity, otherwise, need to re-parse the embed code.
+  if (isset($form_state['storage']['embed_code'])) {
+    $embed_code = $form_state['storage']['embed_code'];
+    $handler = new MediaInternetGovCmsCkanHandler($embed_code);
+    $uri = $handler->parse($embed_code);
+    return $handler->parseIdFromUri($uri);
+  }
+  elseif (isset($form_state['file'])) {
+    return $form_state['file']->resource_id;
+  }
+  return NULL;
 }
 
 
@@ -288,21 +422,10 @@ function govcms_ckan_media_visualisation_include_form_widgets($form, &$form_stat
 function govcms_ckan_media_visualisation_default_key_config($form, &$form_state, $config = array(), $key_type = 'numeric') {
   $form = array();
 
-  // We need a resource_id, however this file might not be saved yet, if it is
-  // we can get it from the entity, otherwise, need to re-parse the embed code.
-  if (isset($form_state['file'])) {
-    $resource_id = $form_state['file']->resource_id;
-  }
-  else {
-    $embed_code = $form_state['storage']['embed_code'];
-    $handler = new MediaInternetGovCmsCkanHandler($embed_code);
-    $uri = $handler->parse($embed_code);
-    $resource_id = $handler->parseIdFromUri($uri);
-  }
-
-  // Make a request to obtain the fields.
-  $client = govcms_ckan_client();
-  $result = $client->get('action/datastore_search', array('id' => $resource_id));
+  // Make a request to obtain the fields. We disable cache for this request so
+  // to flush the cache for this resource and respect new cache_ttl values.
+  $resource_id = _govcms_ckan_media_get_resource_id_from_widget_form($form_state);
+  $result = govcms_ckan_client_request_records($resource_id, NULL, NULL, 0);
 
   // If something went wrong with request we cannot continue.
   if ($result->valid === FALSE || !isset($result->data->fields)) {
@@ -421,6 +544,25 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#empty_option' => t('None'),
     '#description' => t('Optionally spit into multiple visualisations based on the value of this key. Eg. a column of the data might contain the year, with this you could split the visualisations into one per year. !help.',
       array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'split'))),
+  );
+
+  // Allow overriding the default cache duration.
+  $form['cache_ttl'] = array(
+    '#type' => 'select',
+    '#title' => t('Cache expiry'),
+    '#description' => t('How long will the results for this dataset be cached for.'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'cache_ttl', 'global'),
+    '#options' => array(
+      'global' => t('Global default'),
+      0 => t('No cache'),
+      1800 => t('30 minutes'),
+      3600 => t('1 hour'),
+      21600 => t('6 hours'),
+      86400 => t('1 day'),
+      604800 => t('1 week'),
+      2592000 => t('1 month'),
+      15552000 => t('6 months'),
+    ),
   );
 
   $column_override_examples = array(
@@ -587,6 +729,77 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
     ),
   );
 
+  $element['axis_settings']['x_type'] = array(
+    '#type' => 'select',
+    '#title' => t('X Axis label type'),
+    '#description' => t('Force interpretation of X labels as a specific type. Useful for dates (time series)'),
+    '#options' => array(
+      '' => t('Automatic (Indexed if numeric, category if not)'),
+      'indexed' => t('Indexed (Numeric)'),
+      'category' => t('Category (Non-numeric)'),
+      'timeseries' => t('Date or time'),
+    ),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_type'),
+  );
+
+  $element['axis_settings']['x_disable_multiline'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable X label wrapping'),
+    '#description' => t('Check to disable automatically wrapping of X labels. This is useful if labels are overlapping each other, works well with "X label width" and "Chart padding".'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_disable_multiline', FALSE),
+  );
+
+  $element['axis_settings']['x_width'] = array(
+    '#type' => 'textfield',
+    '#title' => t('X label width'),
+    '#description' => t('Specify the width of a X label. NOTE: the label will always be restricted by the "Chart Padding" so ensure that exceeds the label width.'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_width'),
+  );
+
+  $timeseries_legend = '%d = day, %m = month, %Y = year, %H = hour, %M = min, %S = second';
+  $element['axis_settings']['x_date_format'] = array(
+    '#type' => 'container',
+    'input' => array(
+      '#type' => 'textfield',
+      '#title' => t('Date Input Format'),
+      '#description' => t('How is the date formatted in the dataset. Replacements: %replacements', array('%replacements' => $timeseries_legend)),
+      '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_date_format/input'),
+    ),
+    'output' => array(
+      '#type' => 'textfield',
+      '#title' => t('Date Output Format'),
+      '#description' => t('How the date is formatted on the x axis. Replacements: %replacements', array('%replacements' => $timeseries_legend)),
+      '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_date_format/output'),
+    ),
+    '#states' => array(
+      'visible' => array(
+        govcms_ckan_media_get_element_selector('select', 'axis_settings_x_type') => array('value' => 'timeseries'),
+      ),
+    ),
+  );
+
+  $x_padding = govcms_ckan_get_config_value($config, 'axis_settings/x_padding', array());
+  $element['axis_settings']['x_padding'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('X Axis padding'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#attributes' => array('class' => array('container-inline')),
+    '#description' => '<p>' . t('Optionally define the padding at each end of the X axis. If left empty this will be automatically calculated.') . '</p>',
+    'left' => array(
+      '#type' => 'textfield',
+      '#title' => t('Left'),
+      '#size' => 10,
+      '#default_value' => govcms_ckan_get_config_value($x_padding, 'left'),
+    ),
+    'right' => array(
+      '#type' => 'textfield',
+      '#title' => t('Right'),
+      '#size' => 10,
+      '#default_value' => govcms_ckan_get_config_value($x_padding, 'right'),
+    ),
+  );
+
   $element['axis_settings']['y_axis_title'] = govcms_ckan_media_form_title_element(t('Y Axis'));
 
   $element['axis_settings']['y_tick_count'] = array(
@@ -613,6 +826,39 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
       '' => t('None'),
       ' ' => t('Space separated Eg. 10 000'),
       ',' => t('Comma separated Eg. 10,000'),
+    ),
+  );
+
+  $element['axis_settings']['y_rounding'] = array(
+    '#title' => t('Y Tick Value Rounding'),
+    '#type' => 'select',
+    '#options' => array('' => 'Automatic'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/y_rounding'),
+    '#description' => t('Force to rounding to a specific decimal place. Automatic will only show decimal places if required.'),
+  );
+  for ($i = 1; $i <= 4; $i++) {
+    $element['axis_settings']['y_rounding']['#options'][$i] = t('@i places', array('@i' => $i));
+  }
+
+  $y_padding = govcms_ckan_get_config_value($config, 'axis_settings/y_padding', array());
+  $element['axis_settings']['y_padding'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Y Axis padding'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#attributes' => array('class' => array('container-inline')),
+    '#description' => '<p>' . t('Optionally define the padding at each end of the X axis. If left empty this will be automatically calculated.') . '</p>',
+    'top' => array(
+      '#type' => 'textfield',
+      '#title' => t('Top'),
+      '#size' => 10,
+      '#default_value' => govcms_ckan_get_config_value($y_padding, 'top'),
+    ),
+    'bottom' => array(
+      '#type' => 'textfield',
+      '#title' => t('Bottom'),
+      '#size' => 10,
+      '#default_value' => govcms_ckan_get_config_value($y_padding, 'bottom'),
     ),
   );
 
@@ -855,6 +1101,25 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
     );
   }
 
+  // Chart dimensions.
+  $element['chart_size'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Chart dimensions'),
+    '#description' => '<p>' . t('Override the default dimensions of the chart. NOTE: Setting a width is not advised if your website is responsive. Dimensions are in pixels.') . '</p>',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $dimensions = array('height', 'width');
+  foreach ($dimensions as $size) {
+    $element['chart_size'][$size] = array(
+      '#title' => ucwords($size),
+      '#type' => 'textfield',
+      '#default_value' => govcms_ckan_get_config_value($config, 'chart_size/' . $size),
+    );
+  }
+
   return $element;
 }
 
@@ -869,4 +1134,28 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
  */
 function govcms_ckan_media_form_title_element($title) {
   return array('#type' => 'markup', '#markup' => '<h3 class="govcms-ckan-media--settings-title">' . $title . '</h3>');
+}
+
+/**
+ * A Helper to provide a selector for a config form element.
+ *
+ * This is used for drupal form state selectors. See drupal_process_states().
+ * We make some assumptions for language and delta.
+ *
+ * @param string $tag
+ *   The element tag name, eg. input or select.
+ * @param string $name
+ *   The name of the element.
+ * @param int $delta
+ *   The delta of the item, currently this is not able to be determined from
+ *   where this will be called. As there should only ever be one item, a delta
+ *   of 0 should be correct.
+ * @param string $lang
+ *   Like the delta, we default to LANGUAGE_NONE for the language.
+ *
+ * @return string
+ *   The selector of the element using the id.
+ */
+function govcms_ckan_media_get_element_selector($tag, $name, $delta = 0, $lang = LANGUAGE_NONE) {
+  return $tag . '#edit-ckan-visualisation-' . $lang . '-' . $delta . '-config-visualisation-config-' . drupal_html_class($name);
 }

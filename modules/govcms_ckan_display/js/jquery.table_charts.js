@@ -27,6 +27,7 @@
    * -- data-pointSize: Define the point size, default is 2.5
    * -- data-showTitle : Should a title be rendered within the chart
    * -- data-title : The title string
+   * -- data-dataOrder : Define the order of stacked datasets: desc, asc or null.
    * -- data-xLabel: The optional label to show on the X axis
    * -- data-yLabel: The optional label to show on the Y axis
    * -- data-xTickRotate: The angle to rotate X axis labels
@@ -36,16 +37,22 @@
    * -- data-xTickValues: Override the tick values on the X axis (comma separated values)
    * -- data-yTickValueFormat: Format Y axis values in a number format.
    * -- data-xTickValueFormat: Format X axis values in a number format.
+   * -- data-xDisableMultiLine: Disable wrapping of labels on the X axis.
+   * -- data-xWidth: Specify a width for labels on the X axis.
    * -- data-numberFormatMinLength: Formatting of tick values only applies on numbers with a length gte to this.
    * -- data-xTickCull: The max count of labels on the X axis
    * -- data-xTickCentered: Are the x ticks centered above labels.
    * -- data-tickVisibility: Determines tick visibility. Options: show, hide-x, hide-y, hide-xy.
-   * -- data-yRound: The maximum amount of decimal places to allow in the Y axis ticks
+   * -- data-yMaxRound: The maximum amount of decimal places to allow in the Y axis ticks in auto mode.
+   * -- data-yRounding: Enforce a number of of decimal places in the Y axis.
    * -- data-disableChartInteraction: Disable hover values on the chart. Default false.
    * -- data-disableLegendInteraction: Prevent hover/click defaults on legend. Default false
    * -- data-barWidth: Set the ratio for bar widths. If set to manual it will use barWidthOverride value.
    * -- data-barWidthOverride: Set the bar width (without a ratio), Requires barWidth to be 'manual'
-   * -- data-chartPadding: Additional padding on edges of the chart. Expects object with top, right, bottom, left.
+   * -- data-chartPadding: Additional padding on edges of the chart. Expects object with: top, right, bottom, left.
+   * -- data-chartSize: Override default chart width and height. Expects object with: width, height.
+   * -- data-xPadding: Additional padding on edges of the axis. Expects object with: right, left.
+   * -- data-yPadding: Additional padding on edges of the chart. Expects object with: top, bottom.
    * -- data-exportWidth: The width of the exported png. @see chartExport()
    * -- data-exportHeight: The height of the exported png. @see chartExport()
    * - Table headings (th) is used as the label and the following attributes can be used
@@ -114,6 +121,7 @@
       styles: [],
       disabledLegends: [],
       dataClasses: {},
+      dataOrder: null,
       grid: null,
       gridLines: null,
       showTitle: false,
@@ -129,6 +137,10 @@
       xTickValues: null,
       yTickValueFormat: null,
       xTickValueFormat: null,
+      xTickType: null,
+      xDateFormat: {},
+      xDisableMultiLine: false,
+      xWidth: null,
       numberFormatMinLength: 5,
       xTickCull: false,
       xTickCentered: true,
@@ -140,10 +152,14 @@
       exportHeight: '',
       exportStylesheets: [],
       chartPadding: {},
+      chartSize: {},
+      xPadding: {},
+      yPadding: {},
       disableChartInteraction: false,
       disableLegendInteraction: false,
       areaOpacity: 20,
-      yRound: 4,
+      yMaxRound: 4,
+      yRounding: null,
       barWidth: 0.5,
       barWidthOverride: 'auto',
       // The data for the chart.
@@ -155,10 +171,11 @@
       // Data attributes automatically parsed from the table element.
       dataAttributes: ['type', 'rotated', 'labels', 'defaultView', 'grid', 'xLabel', 'yLabel', 'xTickRotate',
         'xTickCount', 'yTickCount', 'yTickValues', 'xTickValues', 'yTickValueFormat', 'xTickValueFormat', 'xTickCull',
-        'stacked', 'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yRound', 'showTitle',
+        'stacked', 'exportWidth', 'exportHeight', 'areaOpacity', 'xTickCentered', 'barWidth', 'yMaxRound', 'showTitle',
         'title', 'hidePoints', 'pointSize', 'xAxisLabelPos', 'yAxisLabelPos', 'gridLines', 'disableChartInteraction',
         'yTickValueRound', 'disableLegendInteraction', 'numberFormatMinLength', 'tickVisibility', 'chartPadding',
-        'barWidthOverride'],
+        'barWidthOverride', 'xPadding', 'yPadding', 'yRounding', 'dataOrder', 'xTickType', 'xDateFormat',
+        'xDisableMultiLine', 'xWidth', 'chartSize'],
       // Chart views determine what is displaying chart vs table.
       chartViewName: 'chart',
       tableViewName: 'table',
@@ -365,6 +382,7 @@
       // Add chart placeholder to dom with a unique Id.
       self.$chart.attr('id', self.settings.chartDomId)
         .addClass(self.settings.component + '--chart')
+        .addClass(self.settings.component + '--chart--' + self.settings.type)
         .insertAfter(self.$tableWrapper);
 
       // Display only table or chart depending on defaultView.

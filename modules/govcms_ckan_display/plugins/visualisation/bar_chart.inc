@@ -7,9 +7,13 @@
 $plugin = array(
   'title' => t('Bar chart'),
   'settings' => array(
+    'keys' => array(),
+    'labels' => NULL,
+    'split' => NULL,
     'bar_width' => 0.5,
     'rotated' => 'false',
     'stacked' => 0,
+    'data_order' => 'desc',
     'show_labels' => 0,
     'grid' => NULL,
     'grid_lines' => array('lines' => array()),
@@ -21,6 +25,7 @@ $plugin = array(
     'disable_chart_interaction' => 0,
     'disable_legend_interaction' => 0,
     'chart_padding' => array(),
+    'chart_size' => array(),
     'label_settings' => array(
       'overrides' => NULL,
     ),
@@ -34,6 +39,13 @@ $plugin = array(
       'x_tick_value_format' => NULL,
       'x_tick_cull' => NULL,
       'tick_visibility' => 'show',
+      'x_padding' => array(),
+      'y_padding' => array(),
+      'y_rounding' => NULL,
+      'x_type' => NULL,
+      'x_date_format' => array(),
+      'x_disable_multiline' => FALSE,
+      'x_width' => NULL,
     ),
     'ckan_filters' => array(
       'search' => NULL,
@@ -50,7 +62,8 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
   $chart_class = 'ckan-bar-chart';
   $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
   $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
-  $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
+  $ckan_cache_ttl = govcms_ckan_get_config_value($config, 'cache_ttl', 'global');
+  $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters, $ckan_cache_ttl);
 
   // If failure, provide error message.
   if ($response->valid === FALSE) {
@@ -74,6 +87,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       'data-barWidthOverride' => govcms_ckan_get_config_value($config, 'bar_width_override', 'auto'),
       'data-rotated' => govcms_ckan_get_config_value($config, 'rotated'),
       'data-stacked' => (govcms_ckan_get_config_value($config, 'stacked') == 1 ? 'true' : 'false'),
+      'data-dataOrder' => govcms_ckan_get_config_value($config, 'data_order', 'desc'),
       'data-labels' => (govcms_ckan_get_config_value($config, 'show_labels') == 1 ? 'true' : 'false'),
       'data-grid' => govcms_ckan_get_config_value($config, 'grid'),
       'data-showTitle' => (govcms_ckan_get_config_value($config, 'show_title') == 1 ? 'true' : 'false'),
@@ -88,8 +102,16 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       'data-yTickValueFormat' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_value_format'),
       'data-xTickValueFormat' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_value_format'),
       'data-xTickCull' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
+      'data-xTickType' => govcms_ckan_get_config_value($config, 'axis_settings/x_type'),
+      'data-xDateFormat' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/x_date_format', array())),
+      'data-xDisableMultiLine' => govcms_ckan_get_config_value($config, 'axis_settings/x_disable_multiline'),
+      'data-xWidth' => govcms_ckan_get_config_value($config, 'axis_settings/x_width'),
+      'data-yRounding' => govcms_ckan_get_config_value($config, 'axis_settings/y_rounding'),
       'data-tickVisibility' => govcms_ckan_get_config_value($config, 'axis_settings/tick_visibility', 'show'),
       'data-chartPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'chart_padding', array())),
+      'data-chartSize' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'chart_size', array())),
+      'data-xPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/x_padding', array())),
+      'data-yPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/y_padding', array())),
       'data-gridLines' => govcms_ckan_json_encode_attribute(govcms_ckan_array_valid_rows($grid_lines, 'value')),
       'data-disableChartInteraction' => (govcms_ckan_get_config_value($config, 'disable_chart_interaction') == 1 ? 'true' : 'false'),
       'data-disableLegendInteraction' => (govcms_ckan_get_config_value($config, 'disable_legend_interaction') == 1 ? 'true' : 'false'),
@@ -180,7 +202,7 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, &$form_state, $
     '#description' => t('Manually set the width of the bars in the chart. Useful if setting X axis values and bar width is incorrect. Numeric whole numbers only or "auto" to use default.'),
     '#states' => array(
       'visible' => array(
-        'select#edit-ckan-visualisation-und-0-config-visualisation-config-bar-width' => array('value' => 'manual'),
+        govcms_ckan_media_get_element_selector('select', 'bar_width') => array('value' => 'manual'),
       ),
     ),
   );
@@ -190,6 +212,23 @@ function govcms_ckan_display_bar_chart_configure($plugin, $form, &$form_state, $
     '#title' => t('Is this stacked'),
     '#description' => t('Stacking a bar chart will display the bars on top of each other rather than side by side.'),
     '#default_value' => govcms_ckan_get_config_value($config, 'stacked'),
+  );
+
+  $config_form['data_order'] = array(
+    '#type' => 'select',
+    '#title' => t('Stacked data order'),
+    '#options' => array(
+      'desc' => t('Descending (Default)'),
+      'asc' => t('Ascending'),
+      '' => t('Order by definition in dataset'),
+    ),
+    '#description' => t('How is stacked data ordered.'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'data_order'),
+    '#states' => array(
+      'visible' => array(
+        govcms_ckan_media_get_element_selector('input', 'stacked') => array('checked' => TRUE),
+      ),
+    ),
   );
 
   return $config_form;

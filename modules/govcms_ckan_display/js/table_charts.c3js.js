@@ -75,6 +75,7 @@
       // the column order.
       if (self.settings.stacked) {
         data.groups = [self.settings.group];
+        data.order = self.settings.dataOrder;
       }
 
       // Apply styles (currently only works with lines and dashes)
@@ -105,6 +106,11 @@
 
       // Add optional classes.
       data.classes = self.settings.dataClasses;
+
+      // Add date input formatting if available and timeseries.
+      if (self.settings.xTickType === 'timeseries' && self.settings.xDateFormat.input) {
+        data.xFormat = self.settings.xDateFormat.input;
+      }
 
       // Add to options.
       self.options.data = data;
@@ -156,9 +162,18 @@
         };
       }
 
+      // Add date output formatting if available and timeseries.
+      if (self.settings.xTickType === 'timeseries' && self.settings.xDateFormat.output) {
+        axis.x.tick.format = self.settings.xDateFormat.output;
+      }
+
       // Format Y axis ticks.
       axis.y.tick.format = function (y) {
         var value = self.maxRound(y);
+        // Enforce Y rounding to specific decimal place.
+        if (!!self.settings.yRounding) {
+          value = value.toFixed(self.settings.yRounding);
+        }
         // Apply number formatting to the tick value.
         if (self.settings.yTickValueFormat) {
           return self.formatNumber(value, self.settings.yTickValueFormat);
@@ -180,6 +195,11 @@
         axis.x.type = 'category';
       }
 
+      // Force the X axis to a specific type. This trumps auto setting above.
+      if (self.settings.xTickType) {
+        axis.x.type = self.settings.xTickType;
+      }
+
       // X Axis tick centered.
       if (self.settings.xTickCentered) {
         axis.x.tick.centered = self.settings.xTickCentered;
@@ -191,6 +211,24 @@
       }
       if (self.settings.yAxisLabelPos || (self.settings.rotated && self.settings.xAxisLabelPos)) {
         axis.y.label.position = (!self.settings.rotated ? self.settings.yAxisLabelPos : self.settings.xAxisLabelPos);
+      }
+
+      // X label disable wrapping.
+      if (self.settings.xDisableMultiLine) {
+        axis.x.tick.multiline = false;
+      }
+
+      // X label width.
+      if (self.settings.xWidth) {
+        axis.x.tick.width = self.settings.xWidth;
+      }
+
+      // X and Y axis padding.
+      if (typeof self.settings.xPadding === "object") {
+        axis.x.padding = self.settings.xPadding;
+      }
+      if (typeof self.settings.yPadding === "object") {
+        axis.y.padding = self.settings.yPadding;
       }
 
       // Add to options.
@@ -312,6 +350,11 @@
         self.options.legend.hide = self.settings.disabledLegends;
       }
 
+      // Chart dimensions.
+      if (self.settings.chartSize) {
+        self.options.size = self.settings.chartSize;
+      }
+
       // Return self for chaining.
       return self;
     };
@@ -339,8 +382,15 @@
      * Eg. '4.000' will output as '4', and '4.123456' will output as '4.1234'.
      */
     self.maxRound = function(number) {
-      var places = Math.pow(10, parseInt(self.settings.yRound));
+      var places = Math.pow(10, parseInt(self.settings.yMaxRound));
       return Math.round(number * places) / places;
+    };
+
+    /*
+     * Replicates functionality of jQuery.addClass() which doesn't work on svgs.
+     */
+    self.addClass = function($el, className) {
+      $el.attr('class', $el.attr('class') + ' ' + className);
     };
 
     /*
@@ -354,6 +404,13 @@
       ];
       // $.addClass does't work here so classes are added as an attribute.
       $('#' + self.settings.chartDomId + ' > svg').attr('class', classes.join(' '));
+      // Add styles to legend.
+      if (self.settings.styles.length) {
+        $(self.settings.styles).each(function (i, d){
+          var $legendItem = $('#' + self.settings.chartDomId + ' .c3-legend-item-' + d.set.replace(' ', '-'));
+          self.addClass($legendItem, 'c3-style-' + d.style);
+        });
+      }
       // Execute any callbacks passed from tableCharts.
       self.settings.chartInitCallback();
     };

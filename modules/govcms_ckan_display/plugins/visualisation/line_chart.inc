@@ -7,6 +7,9 @@
 $plugin = array(
   'title' => t('Line chart'),
   'settings' => array(
+    'keys' => array(),
+    'labels' => NULL,
+    'split' => NULL,
     'rotated' => 'false',
     'area' => 0,
     'show_labels' => 0,
@@ -22,6 +25,7 @@ $plugin = array(
     'disable_legend_interaction' => 0,
     'area_opacity' => 20,
     'chart_padding' => array(),
+    'chart_size' => array(),
     'label_settings' => array(
       'overrides' => NULL,
     ),
@@ -35,6 +39,13 @@ $plugin = array(
       'x_tick_value_format' => NULL,
       'x_tick_cull' => NULL,
       'tick_visibility' => 'show',
+      'x_padding' => array(),
+      'y_padding' => array(),
+      'y_rounding' => NULL,
+      'x_type' => NULL,
+      'x_date_format' => array(),
+      'x_disable_multiline' => FALSE,
+      'x_width' => NULL,
     ),
     'ckan_filters' => array(
       'search' => NULL,
@@ -51,7 +62,8 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
   $chart_class = 'ckan-line-chart';
   $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
   $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
-  $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
+  $ckan_cache_ttl = govcms_ckan_get_config_value($config, 'cache_ttl', 'global');
+  $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters, $ckan_cache_ttl);
 
   // If failure, provide error message.
   if ($response->valid === FALSE) {
@@ -87,8 +99,16 @@ function govcms_ckan_display_line_chart_view($file, $display, $config) {
       'data-yTickValueFormat' => govcms_ckan_get_config_value($config, 'axis_settings/y_tick_value_format'),
       'data-xTickValueFormat' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_value_format'),
       'data-xTickCull' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
+      'data-xTickType' => govcms_ckan_get_config_value($config, 'axis_settings/x_type'),
+      'data-xDateFormat' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/x_date_format', array())),
+      'data-xDisableMultiLine' => govcms_ckan_get_config_value($config, 'axis_settings/x_disable_multiline'),
+      'data-xWidth' => govcms_ckan_get_config_value($config, 'axis_settings/x_width'),
+      'data-yRounding' => govcms_ckan_get_config_value($config, 'axis_settings/y_rounding'),
       'data-tickVisibility' => govcms_ckan_get_config_value($config, 'axis_settings/tick_visibility', 'show'),
       'data-chartPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'chart_padding', array())),
+      'data-chartSize' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'chart_size', array())),
+      'data-xPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/x_padding', array())),
+      'data-yPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/y_padding', array())),
       'data-areaOpacity' => govcms_ckan_get_config_value($config, 'area_opacity', 20),
       'data-gridLines' => govcms_ckan_json_encode_attribute(govcms_ckan_array_valid_rows($grid_lines, 'value')),
       'data-disableChartInteraction' => (govcms_ckan_get_config_value($config, 'disable_chart_interaction') == 1 ? 'true' : 'false'),
@@ -167,10 +187,7 @@ function govcms_ckan_display_line_chart_configure($plugin, $form, &$form_state, 
     '#description' => t('Define the opacity of the area. This does not affect the line.'),
     '#states' => array(
       'visible' => array(
-        // This field is deeply nested so resorting to a fairly ugly selector
-        // if selector is not found the in the edge case that the lang or delta
-        // is different field will fallback to being visible anyway.
-        ':input#edit-ckan-visualisation-und-0-config-visualisation-config-area' => array('checked' => TRUE),
+        govcms_ckan_media_get_element_selector(':input', 'area') => array('checked' => TRUE),
       ),
     ),
   );
