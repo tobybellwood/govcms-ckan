@@ -422,9 +422,10 @@ function govcms_ckan_media_visualisation_include_form_widgets($form, &$form_stat
 function govcms_ckan_media_visualisation_default_key_config($form, &$form_state, $config = array(), $key_type = 'numeric') {
   $form = array();
 
-  // Make a request to obtain the fields.
+  // Make a request to obtain the fields. We disable cache for this request so
+  // to flush the cache for this resource and respect new cache_ttl values.
   $resource_id = _govcms_ckan_media_get_resource_id_from_widget_form($form_state);
-  $result = govcms_ckan_client_request_records($resource_id);
+  $result = govcms_ckan_client_request_records($resource_id, NULL, NULL, 0);
 
   // If something went wrong with request we cannot continue.
   if ($result->valid === FALSE || !isset($result->data->fields)) {
@@ -543,6 +544,25 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
     '#empty_option' => t('None'),
     '#description' => t('Optionally spit into multiple visualisations based on the value of this key. Eg. a column of the data might contain the year, with this you could split the visualisations into one per year. !help.',
       array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'split'))),
+  );
+
+  // Allow overriding the default cache duration.
+  $form['cache_ttl'] = array(
+    '#type' => 'select',
+    '#title' => t('Cache expiry'),
+    '#description' => t('How long will the results for this dataset be cached for.'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'cache_ttl', 'global'),
+    '#options' => array(
+      'global' => t('Global default'),
+      0 => t('No cache'),
+      1800 => t('30 minutes'),
+      3600 => t('1 hour'),
+      21600 => t('6 hours'),
+      86400 => t('1 day'),
+      604800 => t('1 week'),
+      2592000 => t('1 month'),
+      15552000 => t('6 months'),
+    ),
   );
 
   $column_override_examples = array(
@@ -711,7 +731,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
 
   $element['axis_settings']['x_type'] = array(
     '#type' => 'select',
-    '#title' => t('Axis label type'),
+    '#title' => t('X Axis label type'),
     '#description' => t('Force interpretation of X labels as a specific type. Useful for dates (time series)'),
     '#options' => array(
       '' => t('Automatic (Indexed if numeric, category if not)'),
@@ -720,6 +740,20 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
       'timeseries' => t('Date or time'),
     ),
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_type'),
+  );
+
+  $element['axis_settings']['x_disable_multiline'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable X label wrapping'),
+    '#description' => t('Check to disable automatically wrapping of X labels. This is useful if labels are overlapping each other, works well with "X label width" and "Chart padding".'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_disable_multiline', FALSE),
+  );
+
+  $element['axis_settings']['x_width'] = array(
+    '#type' => 'textfield',
+    '#title' => t('X label width'),
+    '#description' => t('Specify the width of a X label. NOTE: the label will always be restricted by the "Chart Padding" so ensure that exceeds the label width.'),
+    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_width'),
   );
 
   $timeseries_legend = '%d = day, %m = month, %Y = year, %H = hour, %M = min, %S = second';
@@ -1064,6 +1098,25 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
       '#title' => ucwords($edge),
       '#type' => 'textfield',
       '#default_value' => govcms_ckan_get_config_value($config, 'chart_padding/' . $edge),
+    );
+  }
+
+  // Chart dimensions.
+  $element['chart_size'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Chart dimensions'),
+    '#description' => '<p>' . t('Override the default dimensions of the chart. NOTE: Setting a width is not advised if your website is responsive. Dimensions are in pixels.') . '</p>',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $dimensions = array('height', 'width');
+  foreach ($dimensions as $size) {
+    $element['chart_size'][$size] = array(
+      '#title' => ucwords($size),
+      '#type' => 'textfield',
+      '#default_value' => govcms_ckan_get_config_value($config, 'chart_size/' . $size),
     );
   }
 
