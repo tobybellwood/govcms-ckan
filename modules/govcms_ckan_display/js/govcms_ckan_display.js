@@ -22,6 +22,11 @@
         exportStylesheets: settings.govcmsCkanDisplay.exportStylesheets
       });
 
+      // Add bubble chart for multiple tables mode, which is used in CKAN Views bubble style.
+      // This must run after above jQuery tablecCharts to get the 'tableChartsChart.bubbleSoruces' value.
+      if (tableChartsChart.hasOwnProperty('bubbleSoruces')) {
+        tableChartsChart.bubble(tableChartsChart.bubbleSoruces);
+      }
     }
   };
 

@@ -41,6 +41,14 @@ class GovCmsCkanDatasetParser {
   private $groupKey;
 
   /**
+   * Merge results based on these keys.
+   *
+   * @var string
+   *   The keys to merge.
+   */
+  private $mergeKeys;
+
+  /**
    * X tick source for labels.
    *
    * This determines what gets used for the X tick labels or the labels (if any)
@@ -198,6 +206,20 @@ class GovCmsCkanDatasetParser {
   }
 
   /**
+   * Add merge keys.
+   *
+   * @param array $merge_keys
+   *   A array of keys used for merging into one data results.
+   *
+   * @return $this
+   *   Return self for chaining.
+   */
+  public function setMergeKeys($merge_keys = []) {
+    $this->mergeKeys = $merge_keys;
+    return $this;
+  }
+
+  /**
    * Set if should be formatted for a renderable array.
    *
    * @param bool $renderable_array
@@ -308,6 +330,9 @@ class GovCmsCkanDatasetParser {
     // Parse the records into groups.
     $this->parseGroups();
 
+    // Parse the records with merge.
+    $this->parseMerge();
+
     // Get the parsing callback.
     $parse_callback = $this->tickSourceCallback();
 
@@ -371,6 +396,89 @@ class GovCmsCkanDatasetParser {
     else {
       // No group key set, for consistency, add to array.
       $this->groupedRecords[] = $this->records;
+    }
+  }
+
+  /**
+   * Parse the result set with merge keys.
+   *
+   * This is used for resolving the issue of displaying multiple dimensional data
+   * as a two dimensional way. Thus it can be rendered as a x y graph.
+   */
+  private function parseMerge() {
+
+    $merge_keys_selected = array_diff($this->mergeKeys, [0]);
+    // Do nothing if no merged keys.
+    if (empty($merge_keys_selected)) {
+      return;
+    }
+
+    // The origin keys in CKAN datasets.
+    $origin_keys = array_diff($this->keys, [0]);
+
+    // Do the merge for each group of records.
+    foreach ($this->groupedRecords as $group_key => $records) {
+
+      // Removed the one used as label key.
+      unset($merge_keys_selected[$this->labelKey]);
+
+      // Remove sub/parent category field. This one is tricky, the RPT dataset
+      // Portfolio and Entity has parent/child relationship which will cause
+      // issue when one of them is selected as label key.
+      // @todo make it configurable. See RPT-71.
+      $parent_child_fields = array('Entity_Name', 'Portfolio_Name');
+      if (in_array($this->labelKey, $parent_child_fields)) {
+        foreach ($parent_child_fields as $parent_child_field) {
+          unset($merge_keys_selected[$parent_child_field]);
+        }
+      }
+
+      // We shouldn't merge split key if there is one.
+      if ($this->groupKey) {
+        unset($merge_keys_selected[$this->groupKey]);
+      }
+
+      $fields_for_merging = array_keys($merge_keys_selected);
+
+      foreach ($records as $item) {
+
+        // Merge fields into each key.
+        foreach ($origin_keys as $origin_key) {
+
+          // Build the new key name from all merge keys' value.
+          $merged_fields_values = [];
+
+          foreach ($fields_for_merging as $field_for_merging) {
+            if ($field_for_merging !== $origin_key) {
+              $merged_fields_values[] = $item->{$field_for_merging};
+            }
+          }
+
+          array_push($merged_fields_values, $origin_key);
+
+          $merged_key = implode(' ', $merged_fields_values);
+
+          // Collect all new keys for updating parser keys in the end.
+          $keys[$merged_key] = $merged_key;
+
+          // Rebuild the data set.
+          if (!isset($data_merged[$item->{$this->labelKey}])) {
+            $data_merged[$item->{$this->labelKey}] = new stdClass();
+            $data_merged[$item->{$this->labelKey}]->{$this->labelKey} = $item->{$this->labelKey};
+          }
+
+          $data_merged[$item->{$this->labelKey}]->{$merged_key} = $item->{$origin_key};
+        }
+      }
+
+      $this->groupedRecords[$group_key] = array_values($data_merged);
+
+      // Update parser keys with new keys.
+      $this->setKeys($keys);
+
+      // Share the data to the theme layer via hook_ckan_display_table_wrapper_alter.
+      $share_data = array('data_merged' => $data_merged, 'records' => $records);
+      drupal_alter('ckan_display_table_wrapper', $share_data);
     }
   }
 
@@ -506,7 +614,15 @@ class GovCmsCkanDatasetParser {
         }
 
         // If it is a label key, it forms an x tick cell, otherwise data.
-        $row[] = $this->labelKey == $key ? $this->createHeaderCell('row', $record->{$key}) : $record->{$key};
+        if (isset($record->{$key})) {
+          $record_key_value = $record->{$key};
+        }
+        else {
+          // If some key is not in one record after merging, we give a empty
+          // value.
+          $record_key_value = '';
+        }
+        $row[] = $this->labelKey == $key ? $this->createHeaderCell('row', $record_key_value) : $record_key_value;
       }
       // Add to rows array.
       $table['rows'][] = $row;

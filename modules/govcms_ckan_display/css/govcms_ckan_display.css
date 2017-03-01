@@ -11,3 +11,7 @@ svg.chart-export{font:10px sans-serif}.chart-export line,.chart-export path{fill
 
 /* Tick visibility */
 .tc-tick-visibility-hide-x .c3-axis-x .tick line {opacity: 0} .tc-tick-visibility-hide-y .c3-axis-y .tick line {opacity: 0} .tc-tick-visibility-hide-xy .c3-axis-x .tick line {opacity: 0} .tc-tick-visibility-hide-xy .c3-axis-y .tick line {opacity: 0}
+
+/* Bubble visibility */
+.bubble-chart .expanded, .table-chart--chart--bubble .expanded {opacity: 0.2;}
+.bubble-chart .link, .table-chart--chart--bubble .link {stroke: #BBBBBB;}

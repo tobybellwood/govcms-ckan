@@ -74,6 +74,12 @@ function govcms_ckan_display_library() {
         'group' => JS_LIBRARY,
         'preprocess' => FALSE,
       ),
+      array(
+        'type' => 'file',
+        'data' => $module_path . '/js/table_charts.bubbleChart.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
+      ),
     ),
     'css' => array(
       'type' => 'file',
