@@ -34,8 +34,8 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
     // @baseurl/dataset/PACKAGE_ID/resource/RESOURCE_ID/download/filename.csv
     // @baseurl/dataset/PACKAGE_ID/resource/RESOURCE_ID
     $patterns = array(
-      '@' . $this->baseHost . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)/download/(?:[^"\&\? ]+)@i',
-      '@' . $this->baseHost . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)@i',
+      '@' . $this->baseUrl . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)/download/(?:[^"\&\? ]+)@i',
+      '@' . $this->baseUrl . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)@i',
     );
 
     // First check if the url contains the embed code.
