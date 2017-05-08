@@ -142,7 +142,8 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
   // Provide ability to change the dataset url.
   if ($result_meta->valid && isset($result_meta->data->id)) {
     $handler = new MediaInternetGovCmsCkanHandler('');
-    $dataset_url = $handler->buildResourceUrl($result_meta->data->package_id, $result_meta->data->id);
+    $package_id = empty($result_meta->data->package_id) ? 'package' : $result_meta->data->package_id;
+    $dataset_url = $handler->buildResourceUrl($package_id, $result_meta->data->id);
 
     // Only allow changing dataset if is already saved.
     $allow_change_dataset = isset($form_state['file']);
@@ -257,7 +258,8 @@ function _govcms_ckan_media_field_widget_form_change_dataset_url($form, &$form_s
   $handler = new MediaInternetGovCmsCkanHandler('');
   $file = $form_state['file'];
   $new_dataset_url = $form_state['values']['dataset_url'];
-  $old_dataset_url = $handler->buildResourceUrl($file->package_id, $file->resource_id);
+  $package_id = empty($file->package_id) ? 'package' : $file->package_id;
+  $old_dataset_url = $handler->buildResourceUrl($package_id, $file->resource_id);
 
   // If the dataset url has changed.
   if ($old_dataset_url != $new_dataset_url) {

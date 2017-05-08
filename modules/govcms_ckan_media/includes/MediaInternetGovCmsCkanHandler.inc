@@ -43,8 +43,9 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
       foreach ($patterns as $pattern) {
         preg_match($pattern, $embed_code, $matches);
         if (isset($matches[1]) && isset($matches[2])) {
-          $next_instance = $this->getNextInstanceId($matches[1], $matches[2]);
-          $uri = $this->baseUri . $matches[1] . '/' . $matches[2] . '/' . $next_instance;
+          $package_id = empty($matches[1]) ? 'package' : $matches[1];
+          $next_instance = $this->getNextInstanceId($package_id, $matches[2]);
+          $uri = $this->baseUri . $package_id . '/' . $matches[2] . '/' . $next_instance;
           return file_stream_wrapper_uri_normalize($uri);
         }
       }
