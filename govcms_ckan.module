@@ -247,9 +247,14 @@ function govcms_ckan_client() {
  * @return object
  *   A client response object.
  */
+
 function govcms_ckan_client_request_records($resource_id = NULL, $search = NULL, $filters = NULL, $cache_ttl = 'global') {
   $client = govcms_ckan_client();
-  $limit = variable_get('govcms_ckan_dataset_record_limit', GOVCMS_CKAN_DATASET_RECORD_LIMIT);
+
+  if (empty($limit)) {
+    $limit = variable_get('govcms_ckan_dataset_record_limit', GOVCMS_CKAN_DATASET_RECORD_LIMIT);
+  }
+
   $query = array('id' => $resource_id, 'limit' => $limit);
 
   if (!empty($search)) {

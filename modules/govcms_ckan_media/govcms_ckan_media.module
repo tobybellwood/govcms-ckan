@@ -93,3 +93,19 @@ function govcms_ckan_media_file_load($files) {
   }
 }
 
+/**
+ * Helper function to add the table selector to the JS.
+ *
+ * @param string
+ *   The table class.
+ */
+function govcms_ckan_media_expose_table_selector($table_selector = NULL) {
+  if (!is_null($table_selector)) {
+    drupal_add_js(array(
+      'govcmsCkanDisplay' => array(
+        // Add the selector to drupal settings.
+        'tableChartSelectors' => array($table_selector),
+      ),
+    ), 'setting');
+  }
+}
