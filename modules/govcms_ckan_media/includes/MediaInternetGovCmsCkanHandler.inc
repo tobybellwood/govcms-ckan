@@ -13,6 +13,7 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
 
   protected $baseUrl;
   protected $baseHost;
+  protected $basePath;
   protected $baseUri = 'ckan://resource/';
 
   /**
@@ -22,6 +23,7 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
     parent::__construct($embed_code);
     $this->baseUrl = variable_get('govcms_ckan_endpoint_url', '');
     $this->baseHost = $this->getBaseHost();
+    $this->basePath = $this->getBasePath();
   }
 
   /**
@@ -34,8 +36,8 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
     // @baseurl/dataset/PACKAGE_ID/resource/RESOURCE_ID/download/filename.csv
     // @baseurl/dataset/PACKAGE_ID/resource/RESOURCE_ID
     $patterns = array(
-      '@' . $this->baseHost . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)/download/(?:[^"\&\? ]+)@i',
-      '@' . $this->baseHost . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)@i',
+      '@' . $this->baseHost . $this->basePath . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)/download/(?:[^"\&\? ]+)@i',
+      '@' . $this->baseHost . $this->basePath . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)@i',
     );
 
     // First check if the url contains the embed code.
@@ -43,8 +45,9 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
       foreach ($patterns as $pattern) {
         preg_match($pattern, $embed_code, $matches);
         if (isset($matches[1]) && isset($matches[2])) {
-          $next_instance = $this->getNextInstanceId($matches[1], $matches[2]);
-          $uri = $this->baseUri . $matches[1] . '/' . $matches[2] . '/' . $next_instance;
+          $package_id = empty($matches[1]) ? 'package' : $matches[1];
+          $next_instance = $this->getNextInstanceId($package_id, $matches[2]);
+          $uri = $this->baseUri . $package_id . '/' . $matches[2] . '/' . $next_instance;
           return file_stream_wrapper_uri_normalize($uri);
         }
       }
@@ -183,6 +186,17 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
     $url_parts = parse_url($this->baseUrl);
     $port = (!empty($url_parts['port']) ? ':' . $url_parts['port'] : NULL);
     return (!empty($url_parts['host']) ? $url_parts['host'] . $port : NULL);
+  }
+
+  /**
+   * Get the base path.
+   *
+   * @return string
+   *   If valid path found it is returned, otherwise an empty string.
+   */
+  public function getBasePath() {
+    $url_parts = parse_url($this->baseUrl);
+    return (!empty($url_parts['path']) ? $url_parts['path'] : '');
   }
 
   /**
