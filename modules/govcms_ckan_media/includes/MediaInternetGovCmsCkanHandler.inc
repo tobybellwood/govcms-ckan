@@ -13,6 +13,7 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
 
   protected $baseUrl;
   protected $baseHost;
+  protected $basePath;
   protected $baseUri = 'ckan://resource/';
 
   /**
@@ -22,6 +23,7 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
     parent::__construct($embed_code);
     $this->baseUrl = variable_get('govcms_ckan_endpoint_url', '');
     $this->baseHost = $this->getBaseHost();
+    $this->basePath = $this->getBasePath();
   }
 
   /**
@@ -34,8 +36,8 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
     // @baseurl/dataset/PACKAGE_ID/resource/RESOURCE_ID/download/filename.csv
     // @baseurl/dataset/PACKAGE_ID/resource/RESOURCE_ID
     $patterns = array(
-      '@' . $this->baseHost . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)/download/(?:[^"\&\? ]+)@i',
-      '@' . $this->baseHost . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)@i',
+      '@' . $this->baseHost . $this->basePath . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)/download/(?:[^"\&\? ]+)@i',
+      '@' . $this->baseHost . $this->basePath . '/dataset/([^"\&\? ]+)/resource/([^"\&\? ]+)@i',
     );
 
     // First check if the url contains the embed code.
@@ -184,6 +186,17 @@ class MediaInternetGovCmsCkanHandler extends MediaInternetBaseHandler {
     $url_parts = parse_url($this->baseUrl);
     $port = (!empty($url_parts['port']) ? ':' . $url_parts['port'] : NULL);
     return (!empty($url_parts['host']) ? $url_parts['host'] . $port : NULL);
+  }
+
+  /**
+   * Get the base path.
+   *
+   * @return string
+   *   If valid path found it is returned, otherwise an empty string.
+   */
+  public function getBasePath() {
+    $url_parts = parse_url($this->baseUrl);
+    return (!empty($url_parts['path']) ? $url_parts['path'] : '');
   }
 
   /**
