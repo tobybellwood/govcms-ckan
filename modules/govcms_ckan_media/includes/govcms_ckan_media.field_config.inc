@@ -142,8 +142,7 @@ function govcms_ckan_media_field_widget_form(&$form, &$form_state, $field, $inst
   // Provide ability to change the dataset url.
   if ($result_meta->valid && isset($result_meta->data->id)) {
     $handler = new MediaInternetGovCmsCkanHandler('');
-    $package_id = empty($result_meta->data->package_id) ? 'package' : $result_meta->data->package_id;
-    $dataset_url = $handler->buildResourceUrl($package_id, $result_meta->data->id);
+    $dataset_url = $handler->buildResourceUrl($result_meta->data->package_id, $result_meta->data->id);
 
     // Only allow changing dataset if is already saved.
     $allow_change_dataset = isset($form_state['file']);
@@ -258,8 +257,7 @@ function _govcms_ckan_media_field_widget_form_change_dataset_url($form, &$form_s
   $handler = new MediaInternetGovCmsCkanHandler('');
   $file = $form_state['file'];
   $new_dataset_url = $form_state['values']['dataset_url'];
-  $package_id = empty($file->package_id) ? 'package' : $file->package_id;
-  $old_dataset_url = $handler->buildResourceUrl($package_id, $file->resource_id);
+  $old_dataset_url = $handler->buildResourceUrl($file->package_id, $file->resource_id);
 
   // If the dataset url has changed.
   if ($old_dataset_url != $new_dataset_url) {
@@ -424,23 +422,38 @@ function govcms_ckan_media_visualisation_include_form_widgets($form, &$form_stat
 function govcms_ckan_media_visualisation_default_key_config($form, &$form_state, $config = array(), $key_type = 'numeric') {
   $form = array();
 
-  // Make a request to obtain the fields. We disable cache for this request so
-  // to flush the cache for this resource and respect new cache_ttl values.
-  $resource_id = _govcms_ckan_media_get_resource_id_from_widget_form($form_state);
-  $result = govcms_ckan_client_request_records($resource_id, NULL, NULL, 0);
+  if (!empty($form_state['ckan_fields'])) {
+    // CKAN views won't have resouce id so pass ckan fields into form state
+    // directly.
+    $fields = $form_state['ckan_fields'];
+    // @todo May need to get values for label overrides see RPT-49
+    $label_overrides = [];
 
-  // If something went wrong with request we cannot continue.
-  if ($result->valid === FALSE || !isset($result->data->fields)) {
-    drupal_set_message(t('Unable to retrieve data for this package'), 'error');
-    return $form;
+    // Get an instance of the parser.
+    $parser = govcms_ckan_dataset_parser();
   }
+  else {
+    // Make a request to obtain the fields.
+    $resource_id = _govcms_ckan_media_get_resource_id_from_widget_form($form_state);
+    $result = govcms_ckan_client_request_records($resource_id);
 
-  // Get an instance of the parser.
-  $parser = govcms_ckan_dataset_parser($result->data);
+    // If something went wrong with request we cannot continue.
+    if ($result->valid === FALSE || !isset($result->data->fields)) {
+      drupal_set_message(t('Unable to retrieve data for this package'), 'error');
+      return $form;
+    }
+
+    // Get an instance of the parser.
+    $parser = govcms_ckan_dataset_parser($result->data);
+    $fields = $result->data->fields;
+
+    // Get labels for overrides.
+    $label_overrides = $parser->getUniqueLabels($config['labels']);
+  }
 
   // Loop over fields to build some lists for options.
   $options = array();
-  foreach ($result->data->fields as $field) {
+  foreach ($fields as $field) {
     // Cleanse the value (stripping new lines).
     $field->id = $parser->cleanseValue($field->id);
     // Ignore the ID field.
@@ -548,23 +561,21 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
       array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'split'))),
   );
 
-  // Allow overriding the default cache duration.
-  $form['cache_ttl'] = array(
-    '#type' => 'select',
-    '#title' => t('Cache expiry'),
-    '#description' => t('How long will the results for this dataset be cached for.'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'cache_ttl', 'global'),
-    '#options' => array(
-      'global' => t('Global default'),
-      0 => t('No cache'),
-      1800 => t('30 minutes'),
-      3600 => t('1 hour'),
-      21600 => t('6 hours'),
-      86400 => t('1 day'),
-      604800 => t('1 week'),
-      2592000 => t('1 month'),
-      15552000 => t('6 months'),
-    ),
+  $form['merge_settings'] = array(
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#type' => 'fieldset',
+    '#title' => t('Merge options'),
+    '#description' => t('<p>Optionally merge more fields into the rendered data table(Rather than only <strong>Keys</strong> and <strong>Label keys</strong>). Leave all above fields unchecked if you don\'t need to merge. <strong>Keys</strong> and <strong>Label keys</strong> must be checked if any fields selected. !help.</p>',
+      array('!help' => govcms_ckan_help_link('govcms_ckan_media', 'merge'))),
+  );
+
+  $form['merge_settings']['merge_keys'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Merge fields'),
+    '#options' => $options['all'],
+    '#default_value' => $config['merge_settings']['merge_keys'],
+    '#empty_option' => t('None'),
   );
 
   $column_override_examples = array(
@@ -585,7 +596,7 @@ function govcms_ckan_media_visualisation_default_key_config($form, &$form_state,
   );
 
   // Get the columns in use and make a text area for each to store its settings.
-  $columns = $x_axis_grouping == 'keys' ? $options['all'] : $parser->getUniqueLabels($config['labels']);
+  $columns = $x_axis_grouping == 'keys' ? $options['all'] : $label_overrides;
   foreach ($columns as $column) {
     $form['column_overrides'][$column] = array(
       '#type' => 'textarea',
@@ -733,7 +744,7 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
 
   $element['axis_settings']['x_type'] = array(
     '#type' => 'select',
-    '#title' => t('X Axis label type'),
+    '#title' => t('Axis label type'),
     '#description' => t('Force interpretation of X labels as a specific type. Useful for dates (time series)'),
     '#options' => array(
       '' => t('Automatic (Indexed if numeric, category if not)'),
@@ -742,20 +753,6 @@ function govcms_ckan_media_visualisation_default_axis_config($form, &$form_state
       'timeseries' => t('Date or time'),
     ),
     '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_type'),
-  );
-
-  $element['axis_settings']['x_disable_multiline'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Disable X label wrapping'),
-    '#description' => t('Check to disable automatically wrapping of X labels. This is useful if labels are overlapping each other, works well with "X label width" and "Chart padding".'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_disable_multiline', FALSE),
-  );
-
-  $element['axis_settings']['x_width'] = array(
-    '#type' => 'textfield',
-    '#title' => t('X label width'),
-    '#description' => t('Specify the width of a X label. NOTE: the label will always be restricted by the "Chart Padding" so ensure that exceeds the label width.'),
-    '#default_value' => govcms_ckan_get_config_value($config, 'axis_settings/x_width'),
   );
 
   $timeseries_legend = '%d = day, %m = month, %Y = year, %H = hour, %M = min, %S = second';
@@ -1100,25 +1097,6 @@ function govcms_ckan_media_visualisation_default_chart_config($form, &$form_stat
       '#title' => ucwords($edge),
       '#type' => 'textfield',
       '#default_value' => govcms_ckan_get_config_value($config, 'chart_padding/' . $edge),
-    );
-  }
-
-  // Chart dimensions.
-  $element['chart_size'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Chart dimensions'),
-    '#description' => '<p>' . t('Override the default dimensions of the chart. NOTE: Setting a width is not advised if your website is responsive. Dimensions are in pixels.') . '</p>',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#tree' => TRUE,
-  );
-
-  $dimensions = array('height', 'width');
-  foreach ($dimensions as $size) {
-    $element['chart_size'][$size] = array(
-      '#title' => ucwords($size),
-      '#type' => 'textfield',
-      '#default_value' => govcms_ckan_get_config_value($config, 'chart_size/' . $size),
     );
   }
 

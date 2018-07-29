@@ -18,3 +18,64 @@ function govcms_ckan_views_views_api() {
     'path' => drupal_get_path('module', 'govcms_ckan_views'),
   ];
 }
+
+/**
+ * A helper to get a CKAN dataset fields list.
+ *
+ * Used for configure key and labels.
+ *
+ * @param array $source
+ *   A array of method of getting the CKAN fields.
+ *
+ * @return array
+ *   A array of fields name. Array key is the unique id and value is human
+ *   readable name.
+ */
+function govcms_ckan_views_get_ckan_fields($source) {
+  $fields = array();
+  $vid = $source['vid'];
+  $vocab = taxonomy_vocabulary_load($vid);
+  $tree = taxonomy_get_tree($vocab->vid);
+
+  // Get fields from vocabulary or from CKAN API.
+  if ($source['type'] === 'vocabulary') {
+    foreach ($tree as $term) {
+      // The term name should be CKAN field name. Term desciption is the field
+      // type, e.g 'text' or 'numeric'.
+      $field = new stdClass();
+      $field->type = strip_tags($term->description);
+      $field->id = $term->name;
+      $fields[] = $field;
+    }
+  }
+  elseif ($source['type'] === 'ckan_api') {
+    foreach ($tree as $term) {
+      // The term name should be CKAN data set name. Term desciption is the
+      // resource id.
+      $resource_id = strip_tags($term->description);
+
+      // Request CKAN to give a list of fields for each resource id.
+      $response = govcms_ckan_client_request_records($resource_id, NULL, NULL, 1);
+      if (!empty($response->data->fields)) {
+        // Merge all resources fields and remove duplicated fields.
+        $fields = array_merge($fields, $response->data->fields);
+        $fields = array_unique($fields, SORT_REGULAR);
+      }
+    }
+  }
+
+  return $fields;
+}
+
+/**
+ * Remove unchecked options from a checkboxes result array.
+ *
+ * @param array $options
+ *   A array of checkboxes options.
+ *
+ * @return array
+ *   A array of all checked options.
+ */
+function govcms_ckan_views_remove_unchecked_options($options) {
+  return array_diff($options, [0]);
+}

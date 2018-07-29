@@ -53,10 +53,26 @@
         .parseGridOptions()
         .parsePointOptions()
         .parseBarOptions()
-        .parseChartOptions();
+        .parseChartOptions()
+        .parseBubbleOptions();
 
       // Create chart.
       window.tableChartC3jsCharts[self.settings.chartDomId] = c3.generate(self.options);
+      // Since bubble charts are not pure C3, the D3 component must be called separately.
+      if (self.options.data.type !== 'bubble') {
+        return;
+      }
+      if (self.options.tablesToBubble === false) {
+        // If it's not required to turn multiple tables into one bubble, then build one bubble for one table as other
+        // charts. Otherwise we save tables data into a array for building in the end.
+        window.tableChartsChart.bubble(self.options);
+      }
+      else if (tableChartsChart.hasOwnProperty('bubbleSoruces')) {
+        tableChartsChart.bubbleSoruces.push(self.options);
+      }
+      else {
+        tableChartsChart.bubbleSoruces = [self.options];
+      }
     };
 
     /*
@@ -213,16 +229,6 @@
         axis.y.label.position = (!self.settings.rotated ? self.settings.yAxisLabelPos : self.settings.xAxisLabelPos);
       }
 
-      // X label disable wrapping.
-      if (self.settings.xDisableMultiLine) {
-        axis.x.tick.multiline = false;
-      }
-
-      // X label width.
-      if (self.settings.xWidth) {
-        axis.x.tick.width = self.settings.xWidth;
-      }
-
       // X and Y axis padding.
       if (typeof self.settings.xPadding === "object") {
         axis.x.padding = self.settings.xPadding;
@@ -350,12 +356,33 @@
         self.options.legend.hide = self.settings.disabledLegends;
       }
 
-      // Chart dimensions.
-      if (self.settings.chartSize) {
-        self.options.size = self.settings.chartSize;
+      // Return self for chaining.
+      return self;
+    };
+
+    /*
+     * Set options specific to bubble chart.
+     */
+    self.parseBubbleOptions = function () {
+      if (self.options.data.type === 'bubble') {
+        //  Hide the vertical & horizontal lines.
+        self.options.axis.x.show = false;
+        self.options.axis.y.show = false;
+        // C3 legend will not work with pure D3 bubble chart.
+        self.options.legend.item = {
+          onclick: function () {
+            return false;
+          },
+          onmouseover: function () {
+            return false;
+          }
+        }
+        self.settings.disableLegendInteraction = true;
+        self.options.tablesToBubble = self.settings.tablesToBubble;
+        self.options.parents = self.settings.parents;
+        self.options.bubbleLabel = self.settings.bubbleLabel;
       }
 
-      // Return self for chaining.
       return self;
     };
 

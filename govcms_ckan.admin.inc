@@ -28,7 +28,7 @@ function govcms_ckan_settings_form() {
   $form['govcms_ckan_api_key'] = array(
     '#type' => 'textfield',
     '#title' => t('Api Key'),
-    '#description' => t('Optionally specify an API key.'),
+    '#description' => t('Specify the API key.'),
     '#weight' => 1,
     '#size' => 100,
     '#default_value' => variable_get('govcms_ckan_api_key', ''),
@@ -37,42 +37,24 @@ function govcms_ckan_settings_form() {
   $form['govcms_ckan_auth_header'] = array(
     '#type' => 'textfield',
     '#title' => t('Authorisation header'),
-    '#description' => t('Optionally override the HTTP authorisation header if required. Default is "Authorization"'),
+    '#description' => t('Optionally override the HTTP authorisation header if required.'),
     '#weight' => 2,
     '#size' => 100,
+    '#required' => FALSE,
     '#default_value' => variable_get('govcms_ckan_auth_header', ''),
   );
 
-  $form['govcms_ckan_advanced'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Advanced settings'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#weight' => 10,
-  );
+  module_load_include('inc', 'govcms_ckan_media', 'includes/govcms_ckan_media.field_config');
 
-  $form['govcms_ckan_advanced']['govcms_ckan_cache_ttl'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Cache expiry'),
-    '#description' => t('How long results from CKAN get cached after a successful request. In seconds'),
-    '#size' => 100,
-    '#default_value' => variable_get('govcms_ckan_cache_ttl', GOVCMS_CKAN_CACHE_TTL),
-  );
+  $ckan_visualisations = _govcms_ckan_media_field_widget_visualisation_options();
 
-  $form['govcms_ckan_advanced']['govcms_ckan_cache_fail_ttl'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Failed request cache expiry'),
-    '#description' => t('How long results from CKAN get cached after a failed request. In seconds'),
-    '#size' => 100,
-    '#default_value' => variable_get('govcms_ckan_cache_fail_ttl', GOVCMS_CKAN_CACHE_FAIL_TTL),
-  );
-
-  $form['govcms_ckan_advanced']['govcms_ckan_dataset_record_limit'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Dataset record limit'),
-    '#description' => t('The maximum number records that will be fetched with a single dataset result request'),
-    '#size' => 100,
-    '#default_value' => variable_get('govcms_ckan_dataset_record_limit', GOVCMS_CKAN_DATASET_RECORD_LIMIT),
+  $form['govcms_ckan_default_visualisation'] = array(
+    '#type' => 'select',
+    '#title' => t('Default CKAN Visualisation'),
+    '#description' => t('Set the default CKAN Visualisation method.'),
+    '#weight' => 3,
+    '#options' => !empty($ckan_visualisations) ? $ckan_visualisations : array(),
+    '#default_value' => variable_get('govcms_ckan_default_visualisation', ''),
   );
 
   $form['#validate'][] = 'govcms_ckan_settings_form_validate';

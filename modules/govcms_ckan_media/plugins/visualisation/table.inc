@@ -20,6 +20,9 @@ $plugin = array(
       'filters' => NULL,
     ),
     'column_overrides' => array(),
+    'merge_settings' => array(
+      'merge_keys' => NULL,
+    ),
   ),
 );
 
@@ -29,10 +32,16 @@ $plugin = array(
 function govcms_ckan_media_table_view($file, $display, $config) {
   $element = array();
   $chart_class = 'ckan-table';
-  $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
-  $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
-  $ckan_cache_ttl = govcms_ckan_get_config_value($config, 'cache_ttl', 'global');
-  $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters, $ckan_cache_ttl);
+  if (isset($file->resource_id)) {
+    $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
+    $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
+    $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
+  }
+  elseif (!empty($file->data)) {
+    $response = new stdClass();
+    $response->data = $file->data;
+    $response->valid = TRUE;
+  }
 
   // If failure, provide error message.
   if ($response->valid !== FALSE) {
@@ -48,14 +57,27 @@ function govcms_ckan_media_table_view($file, $display, $config) {
 
     // Parse the data.
     $parser = govcms_ckan_dataset_parser($response->data);
-    $element = $parser
+    $parser
       ->setKeys($keys)
       ->setLabelKey($config['labels'])
       ->setGroupKey($config['split'])
+      ->setMergeKeys($config['merge_settings']['merge_keys'])
       ->setHeaderSource('keys')
-      ->setTableAttributes($attributes)
-      ->setColumnAttributes($column_overrides)
-      ->parse();
+      ->setTableAttributes($attributes);
+
+    if ($column_overrides) {
+      $parser->setColumnAttributes($column_overrides);
+    }
+
+    // Return the table in a wrapper.
+    $element = array(
+      '#theme' => 'ckan_display_table_wrapper',
+      '#tables' => $parser->parse(),
+      '#show_titles' => !empty($config['split']),
+    );
+
+    // Add JS to the table.
+    govcms_ckan_media_expose_table_selector('.' . $chart_class);
   }
 
   return $element;

@@ -89,7 +89,6 @@ class GovCmsCkanDatasetParser {
    *   Instantiate with result set, this can also be done later with setResult.
    */
   public function __construct($result = NULL) {
-    $this->setMergeKeys();
     if (!empty($result)) {
       $this->setResult($result);
     }

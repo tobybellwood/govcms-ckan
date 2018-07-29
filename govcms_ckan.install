@@ -5,10 +5,18 @@
  * Code for the govCMS CKAN module install/uninstall/schema hooks.
  */
 
+$module_dir = drupal_get_path('module', 'govcms_ckan');
+
+// Loop through and include each file requiring an update to be run.
+foreach (file_scan_directory($module_dir . '/updates', '/.+\.inc/i') as $file) {
+  require_once $file->uri;
+}
+
 /**
  * Implements hook_uninstall().
  */
 function govcms_ckan_uninstall() {
   variable_del('govcms_ckan_endpoint_url');
   variable_del('govcms_ckan_api_key');
+  variable_del('govcms_ckan_default_visualisation');
 }

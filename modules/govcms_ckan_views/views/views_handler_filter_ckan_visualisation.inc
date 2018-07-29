@@ -102,6 +102,8 @@ class views_handler_filter_ckan_visualisation extends views_handler_filter_many_
 
     // We don't need all option here.
     unset($form['ckan_visualisation']['#options']['All']);
+
+    $form['ckan_visualisation']['#default_value'] = variable_get('govcms_ckan_default_visualisation', '');
   }
 
 }

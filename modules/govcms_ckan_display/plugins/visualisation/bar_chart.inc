@@ -25,7 +25,9 @@ $plugin = array(
     'disable_chart_interaction' => 0,
     'disable_legend_interaction' => 0,
     'chart_padding' => array(),
-    'chart_size' => array(),
+    'merge_settings' => array(
+      'merge_keys' => NULL,
+    ),
     'label_settings' => array(
       'overrides' => NULL,
     ),
@@ -44,8 +46,6 @@ $plugin = array(
       'y_rounding' => NULL,
       'x_type' => NULL,
       'x_date_format' => array(),
-      'x_disable_multiline' => FALSE,
-      'x_width' => NULL,
     ),
     'ckan_filters' => array(
       'search' => NULL,
@@ -60,10 +60,16 @@ $plugin = array(
 function govcms_ckan_display_bar_chart_view($file, $display, $config) {
   $element = array();
   $chart_class = 'ckan-bar-chart';
-  $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
-  $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
-  $ckan_cache_ttl = govcms_ckan_get_config_value($config, 'cache_ttl', 'global');
-  $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters, $ckan_cache_ttl);
+  if (isset($file->resource_id)) {
+    $ckan_search = govcms_ckan_get_config_value($config, 'ckan_filters/search');
+    $ckan_filters = govcms_ckan_get_config_value($config, 'ckan_filters/filters');
+    $response = govcms_ckan_client_request_records($file->resource_id, $ckan_search, $ckan_filters);
+  }
+  elseif (!empty($file->data)) {
+    $response = new stdClass();
+    $response->data = $file->data;
+    $response->valid = TRUE;
+  }
 
   // If failure, provide error message.
   if ($response->valid === FALSE) {
@@ -104,12 +110,9 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       'data-xTickCull' => govcms_ckan_get_config_value($config, 'axis_settings/x_tick_cull'),
       'data-xTickType' => govcms_ckan_get_config_value($config, 'axis_settings/x_type'),
       'data-xDateFormat' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/x_date_format', array())),
-      'data-xDisableMultiLine' => govcms_ckan_get_config_value($config, 'axis_settings/x_disable_multiline'),
-      'data-xWidth' => govcms_ckan_get_config_value($config, 'axis_settings/x_width'),
       'data-yRounding' => govcms_ckan_get_config_value($config, 'axis_settings/y_rounding'),
       'data-tickVisibility' => govcms_ckan_get_config_value($config, 'axis_settings/tick_visibility', 'show'),
       'data-chartPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'chart_padding', array())),
-      'data-chartSize' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'chart_size', array())),
       'data-xPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/x_padding', array())),
       'data-yPadding' => govcms_ckan_json_encode_attribute(govcms_ckan_get_config_value($config, 'axis_settings/y_padding', array())),
       'data-gridLines' => govcms_ckan_json_encode_attribute(govcms_ckan_array_valid_rows($grid_lines, 'value')),
@@ -117,7 +120,7 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
       'data-disableLegendInteraction' => (govcms_ckan_get_config_value($config, 'disable_legend_interaction') == 1 ? 'true' : 'false'),
 
       // Display settings.
-      'data-palette' => (!empty($config['palette_override']) ? $config['palette_override'] : $config['palette']),
+      'data-palette' => (!empty($config['palette_override']) ? $config['palette_override'] : govcms_ckan_get_config_value($config, 'palette')),
       'data-exportWidth' => govcms_ckan_get_config_value($config, 'export_width'),
       'data-exportHeight' => govcms_ckan_get_config_value($config, 'export_height'),
       'data-xAxisLabelPos' => govcms_ckan_get_config_value($config, 'x_axis_label_position'),
@@ -130,15 +133,26 @@ function govcms_ckan_display_bar_chart_view($file, $display, $config) {
     $parser
       ->setKeys($keys)
       ->setLabelKey($config['labels'])
-      ->setKeysOrder($column_overrides, 'data-weight')
       ->setHeaderSource($config['x_axis_grouping'])
-      ->setLabelReplacements($label_replacements)
-      ->setTableAttributes($attributes)
-      ->setColumnAttributes($column_overrides);
+      ->setTableAttributes($attributes);
+
+    if ($column_overrides) {
+      $parser
+        ->setKeysOrder($column_overrides, 'data-weight')
+        ->setColumnAttributes($column_overrides);
+    }
+
+    if ($label_replacements) {
+      $parser->setLabelReplacements($label_replacements);
+    }
 
     // If splitting on the value of a key.
     if ($config['split']) {
       $parser->setGroupKey($config['split']);
+    }
+
+    if ($config['merge_settings']['merge_keys']) {
+      $parser->setMergeKeys($config['merge_settings']['merge_keys']);
     }
 
     // Return the parsed tables in a wrapper.
